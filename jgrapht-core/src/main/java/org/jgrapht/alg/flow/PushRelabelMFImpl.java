@@ -56,7 +56,8 @@ import java.util.*;
  * @author Alexey Kudinkin
  *
  */
-public class PushRelabelMFImpl<V, E>
+public class
+PushRelabelMFImpl<V, E>
     extends
     MaximumFlowAlgorithmBase<V, E>
 {
