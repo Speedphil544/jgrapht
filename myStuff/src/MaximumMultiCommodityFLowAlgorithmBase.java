@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
  */
 public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         implements
-        MaximumFlowAlgorithm<V, E>,
-        MinimumSTCutAlgorithm<V, E> {
+        MaximumMultiCommodityFlowAlgorithm<V, E>
+         {
     /**
      * Default tolerance.
      */
@@ -44,9 +44,9 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
     protected ExtensionManager<E, ? extends AnnotatedFlowEdge> edgeExtensionManager;
 
     /* Source used during the last invocation of this algorithm */
-    protected V source = null;
+    protected List<V> sources = null;
     /* Sink used during the last invocation of this algorithm */
-    protected V sink = null;
+    protected List<V> sinks = null;
     /* Max flow established after last invocation of the algorithm. */
     protected double maxFlowValue = -1;
     /* Mapping of the flow on each edge. */
@@ -118,21 +118,21 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
      * Prepares all data structures to start a new invocation of the Maximum Flow or Minimum Cut
      * algorithms
      *
-     * @param source                 source
-     * @param sink                   sink
+     * @param sources                 source
+     * @param sinks                  sink
      * @param vertexExtensionFactory vertex extension factory
      * @param edgeExtensionFactory   edge extension factory
      * @param <VE>                   vertex extension type
      */
     protected <VE extends VertexExtensionBase> void init(
-            V source, V sink, ExtensionFactory<VE> vertexExtensionFactory,
+            List<V> sources, List<V> sinks, ExtensionFactory<VE> vertexExtensionFactory,
             ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory) {
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
 
         buildInternal();
-        this.source = source;
-        this.sink = sink;
+        this.sources = sources;
+        this.sinks = sinks;
         maxFlowValue = 0;
         maxFlow = null;
         sourcePartition = null;
@@ -395,8 +395,8 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
      *
      * @return current source
      */
-    public V getCurrentSource() {
-        return source;
+    public List<V> getCurrentSource() {
+        return sources;
     }
 
     /**
@@ -405,8 +405,8 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
      *
      * @return current sink
      */
-    public V getCurrentSink() {
-        return sink;
+    public List<V> getCurrentSink() {
+        return sinks;
     }
 
     /**
@@ -458,8 +458,10 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
             return inverseEdge.getTarget().prototype;
     }
 
-    /*---------------- Minimum s-t cut related methods -------------------*/
 
+
+    /*---------------- Minimum s-t cut related methods -------------------*/
+/*
     @Override
     public double calculateMinCut(V source, V sink) {
         return this.getMaximumFlowValue(source, sink);
@@ -471,9 +473,11 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
     }
 
     @Override
+
+
     public Set<V> getSourcePartition() {
         if (sourcePartition == null)
-            calculateSourcePartition();
+           calculateSourcePartition();
         return sourcePartition;
     }
 
@@ -512,10 +516,14 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         }
         return cutEdges;
     }
-
+*/
     /**
      * Calculate the set of reachable vertices from $s$ in the residual graph.
      */
+
+
+    /*
+
     protected void calculateSourcePartition() {
         // the source partition contains all vertices reachable from s in the residual graph
         this.sourcePartition = new LinkedHashSet<>();
@@ -532,6 +540,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
             }
         }
     }
+    */
 }
 
 

@@ -6,6 +6,7 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 
+import java.util.List;
 
 /*
  * @param <V> the graph vertex type.
@@ -21,12 +22,12 @@ public class GargAndKoenemannMMCFImp<V, E>
     /**
      * Current source vertex.
      */
-    private VertexExtension currentSource;
+    private List<VertexExtension> currentSources;
 
     /**
      * Current sink vertex.
      */
-    private VertexExtension currentSink;
+    private List<VertexExtension> currentSinks;
 
     private final ExtensionFactory<VertexExtension> vertexExtensionsFactory;
     private final ExtensionFactory<AnnotatedFlowEdge> edgeExtensionsFactory;
@@ -65,38 +66,61 @@ public class GargAndKoenemannMMCFImp<V, E>
     }
 
     @Override
-    public MaximumFlow<E> getMaximumFlow(V source, V sink) {
-        this.calculateMaxFlow(source, sink);
+    public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks) {
+        this.calculateMaxFlow(sources, sinks);
         maxFlow = composeFlow();
-        return new MaximumFlowImpl<>(maxFlowValue, maxFlow);
+        return new MaximumMultiCommodityFlowImpl<>(maxFlowValue, maxFlow);
     }
 
     /**
      * Assigns source to currentSource and sink to currentSink. Afterwards invokes dinic() method to
      * calculate the maximum flow in the network using Dinic algorithm with scaling.
      *
-     * @param source source vertex.
-     * @param sink   sink vertex.
+     * @param sources source vertex.
+     * @param sinks   sink vertex.
      * @return the value of the maximum flow in the network.
      */
-    private double calculateMaxFlow(V source, V sink) {
-        super.init(source, sink, vertexExtensionsFactory, edgeExtensionsFactory);
+    private double calculateMaxFlow(List<V> sources, List<V> sinks) {
 
-        if (!network.containsVertex(source)) {
-            throw new IllegalArgumentException("Network does not contain source!");
+        super.init(sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
+
+        if (sources == (null)) {
+            throw new IllegalArgumentException("Network does not contain sources!");
         }
 
-        if (!network.containsVertex(sink)) {
-            throw new IllegalArgumentException("Network does not contain sink!");
+
+        if (sinks == (null)) {
+            throw new IllegalArgumentException("Network does not contain sinks!");
+        }
+        if (sinks.size() != sources.size()) {
+            throw new IllegalArgumentException("Network does not have the same number of sources and sinks!");
         }
 
-        if (source.equals(sink)) {
-            throw new IllegalArgumentException("Source is equal to sink!");
+
+        for (V source : sources) {
+            if (!network.containsVertex(source)) {
+                throw new IllegalArgumentException("Network does not contain valid source!");
+            }
+        }
+        for (V sink : sinks) {
+            if (!network.containsVertex(sink)) {
+                throw new IllegalArgumentException("Network does not contain valid sink!");
+            }
         }
 
-        currentSource = getVertexExtension(source);
-        currentSink = getVertexExtension(sink);
+        for (int i = 0; i < sinks.size(); i++) {
+            if (sinks.get(i).equals(sources.get(i))) {
+                throw new IllegalArgumentException("A source is equal to its sink!");
+            }
+        }
 
+        /*
+        for (int i = 0; i < sinks.size(); i++) {
+            currentSources.add(getVertexExtension(sources.get(i)));
+            currentSinks.add(getVertexExtension(sinks.get(i)));
+
+        }
+*/
         gargAndKoenemann();
 
         return maxFlowValue;
@@ -111,7 +135,20 @@ public class GargAndKoenemannMMCFImp<V, E>
         while (true) {
             //choose shortest path, its value
             DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
-            GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = dijkstra.getPath(getVertexExtension(this.source), getVertexExtension(this.sink));
+
+            double shortestPathLength = 100000;
+
+            GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
+
+            for (int i = 0; i < this.sinks.size(); i++) {
+
+                GraphPath<VertexExtensionBase, AnnotatedFlowEdge> newPath = dijkstra.getPath(getVertexExtension(this.sources.get(i)), getVertexExtension(this.sinks.get(i)));
+                if (newPath.getLength() < shortestPathLength) {
+                    shortestPath = newPath;
+                    shortestPathLength = shortestPath.getWeight();
+                }
+
+            }
 
 
             // breaking condition, we stop when shortest path hast length bigger or equal to 1`
@@ -140,7 +177,7 @@ public class GargAndKoenemannMMCFImp<V, E>
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
 
                 //System.out.println(e.getSource().toString() + networkCopy.getEdgeWeight(e));
-                networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + networkCopy.getEdgeWeight(e)* accuracy * (smallestCapacity / e.capacity));
+                networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + networkCopy.getEdgeWeight(e) * accuracy * (smallestCapacity / e.capacity));
                 e.flow = e.flow + smallestCapacity;
 
             }

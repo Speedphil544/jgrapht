@@ -1,6 +1,8 @@
 import org.jgrapht.alg.interfaces.FlowAlgorithm;
 
+
 import java.util.Map;
+import java.util.List;
 
 public interface MaximumMultiCommodityFlowAlgorithm<V, E>
         extends
@@ -12,11 +14,11 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      * maximum flow from <tt>source</tt> to <tt>sink</tt>. Returns an object containing detailed
      * information about the flow.
      *
-     * @param source source of the flow inside the network
-     * @param sink   sink of the flow inside the network
+     * @param sources source of the flow inside the network
+     * @param sinks   sink of the flow inside the network
      * @return maximum flow
      */
-    MaximumFlow<E> getMaximumFlow(V source, V sink);
+    MaximumFlow<E> getMaximumFlow( List<V> sources, List<V> sinks);
 
     /**
      * Sets current source to <tt>source</tt>, current sink to <tt>sink</tt>, then calculates
@@ -24,12 +26,12 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      * <tt>sink</tt> must be vertices of the <tt>
      * network</tt> passed to the constructor, and they must be different.
      *
-     * @param source source vertex
-     * @param sink   sink vertex
+     * @param sources source vertex
+     * @param sinks   sink vertex
      * @return the value of the maximum flow
      */
-    default double getMaximumFlowValue(V source, V sink) {
-        return getMaximumFlow(source, sink).getValue();
+    default double getMaximumFlowValue(List<V> sources, List<V> sinks) {
+        return getMaximumFlow(sources, sinks).getValue();
     }
 
     /**
