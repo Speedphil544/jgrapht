@@ -1,6 +1,8 @@
 import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.MaximumFlowAlgorithm;
 import org.jgrapht.alg.interfaces.MinimumSTCutAlgorithm;
+import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.alg.util.extension.Extension;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
@@ -90,15 +92,25 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
         this.networkCopy = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
 
-
-        // delta
-
-        this.delta = 0.00001;
-
-
         // accuracy
 
-        this.accuracy = 0.0001;
+        this.accuracy = 0.1;
+
+        //needed for delta
+
+        //AllDirectedPaths alldircectedPaths = new AllDirectedPaths(this.network);
+        //List<GraphPath> allPaths = alldircectedPaths.getAllPaths(this.source, this.sink, false, null);
+
+        double lengthOfLongestPath = 2.0;
+        //for (GraphPath path : allPaths) {
+         //   if (allPaths.size() > lengthOfLongestPath)
+          //      lengthOfLongestPath = allPaths.size();
+
+        //}
+
+
+        // delta
+        this.delta = (1 + accuracy) * Math.pow((1 + accuracy) * lengthOfLongestPath, -1 / accuracy);
     }
 
 
@@ -133,11 +145,16 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
      */
     void buildInternal() {
         if (directedGraph) { // Directed graph
+
+
+            // add vertices to networkCopy
+
+
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 vx.prototype = v;
 
-                // addVertexToNetworkCopy#
+
 
 
                 networkCopy.addVertex(vx);
@@ -156,9 +173,9 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
 
                 V u = network.getEdgeSource(e);
-                VertexExtensionBase ux = vertexExtensionManager.getExtension(v);
+                VertexExtensionBase ux = vertexExtensionManager.getExtension(u);
 
-                AnnotatedFlowEdge edgeCopy = createEdge(ux, vx, e, delta);
+                AnnotatedFlowEdge edgeCopy = createEdge(ux, vx, e, network.getEdgeWeight(e));
 
                 edgeCopy.prototype = e;
 
@@ -170,7 +187,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
             }
 
-
+/*
             for (V u : network.vertexSet()) {
                 VertexExtensionBase ux = vertexExtensionManager.getExtension(u);
 
@@ -188,6 +205,9 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
                     }
                 }
             }
+
+            */
+
         } else { // Undirected graph
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
@@ -199,11 +219,14 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
                 VertexExtensionBase vx =
                         vertexExtensionManager.getExtension(network.getEdgeTarget(e));
                 AnnotatedFlowEdge forwardEdge = createEdge(ux, vx, e, network.getEdgeWeight(e));
-                AnnotatedFlowEdge backwardEdge = createBackwardEdge(forwardEdge);
+             //   AnnotatedFlowEdge backwardEdge = createBackwardEdge(forwardEdge);
                 ux.getOutgoing().add(forwardEdge);
-                vx.getOutgoing().add(backwardEdge);
+             //   vx.getOutgoing().add(backwardEdge);
             }
         }
+
+
+
     }
 
     private AnnotatedFlowEdge createEdge(
@@ -216,7 +239,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
         return ex;
     }
-
+/*
     private AnnotatedFlowEdge createBackwardEdge(AnnotatedFlowEdge forwardEdge) {
         AnnotatedFlowEdge backwardEdge;
         E backwardPrototype =
@@ -241,6 +264,9 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
         return backwardEdge;
     }
+
+*/
+
 
     /**
      * Increase flow in the direction denoted by edge $(u,v)$. Any existing flow in the reverse

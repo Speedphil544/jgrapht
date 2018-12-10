@@ -109,12 +109,9 @@ public class GargAndKoenemannMMCFImp<V, E>
 
 
         while (true) {
-
+            //choose shortest path, its value
             DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = dijkstra.getPath(getVertexExtension(this.source), getVertexExtension(this.sink));
-
-
-            //choose shortest path, its value
 
 
             // breaking condition, we stop when shortest path hast length bigger or equal to 1`
@@ -125,38 +122,44 @@ public class GargAndKoenemannMMCFImp<V, E>
 
             //get smallest capacity
 
-            Double smallestWeight = 10000.0;
+
             Double smallestCapacity = 10000.0;
 
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
 
-                if (networkCopy.getEdgeWeight(e) < smallestWeight){
+                double newCapacity = networkCopy.getEdgeWeight(e);
+                if (newCapacity < smallestCapacity) {
                     smallestCapacity = e.capacity;
+
                 }
-
-
             }
 
 
             //update length and flow(value)
 
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
-                System.out.println(e.getSource().toString()+networkCopy.getEdgeWeight(e));
-                networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + accuracy * (smallestCapacity / e.capacity));
+
+                //System.out.println(e.getSource().toString() + networkCopy.getEdgeWeight(e));
+                networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + networkCopy.getEdgeWeight(e)* accuracy * (smallestCapacity / e.capacity));
                 e.flow = e.flow + smallestCapacity;
 
             }
-            System.out.println(this.networkCopy);
+
+            maxFlowValue += smallestCapacity;
 
 
         }
 
 
         //scale the flow
-       for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+        for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
 
-           e.flow = (e.flow* Math.log(1 + accuracy)) / (Math.log((1 + accuracy) / delta));
-       }
+            e.flow *= Math.log(1 + accuracy);
+            e.flow /= (Math.log((1 + accuracy) / delta));
+
+        }
+        maxFlowValue *= Math.log(1 + accuracy);
+        maxFlowValue /= (Math.log((1 + accuracy) / delta));
     }
 
 
