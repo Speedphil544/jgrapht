@@ -20,7 +20,7 @@ public class Testing {
         directedGraph.addEdge("a", "b");
         directedGraph.addEdge("b", "c");
 
-        directedGraph.setEdgeWeight("a", "b", 2.0);
+        directedGraph.setEdgeWeight("a", "b", 1.0);
         directedGraph.setEdgeWeight("b", "c", 1.0);
 
 
@@ -31,9 +31,7 @@ public class Testing {
         alg.getMaximumFlow("a","c");
         System.out.println(alg.networkCopy);
 
-        DijkstraShortestPath dijkstra2 = new DijkstraShortestPath(alg.networkCopy);
-        GraphPath shortestPath2 = dijkstra2.getPath(alg.vertexExtensionManager.getExtension("a"), alg.vertexExtensionManager.getExtension("c"));
-        System.out.println(shortestPath2.getWeight());
+
 
 
         DijkstraShortestPath dijkstra = new DijkstraShortestPath(directedGraph);

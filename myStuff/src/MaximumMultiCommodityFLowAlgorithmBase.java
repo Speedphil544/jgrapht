@@ -93,12 +93,12 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
         // delta
 
-        this.delta = 0.1;
+        this.delta = 0.00001;
 
 
         // accuracy
 
-        this.accuracy = 0.1;
+        this.accuracy = 0.0001;
     }
 
 
@@ -303,6 +303,13 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         V prototype;
 
         double excess;
+
+
+        // to String override
+
+        public String toString() {
+            return this.prototype.toString();
+        }
 
         public List<AnnotatedFlowEdge> getOutgoing() {
             return outgoing;

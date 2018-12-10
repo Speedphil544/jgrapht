@@ -125,13 +125,13 @@ public class GargAndKoenemannMMCFImp<V, E>
 
             //get smallest capacity
 
+            Double smallestWeight = 10000.0;
             Double smallestCapacity = 10000.0;
 
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
 
-                if (network.getEdgeWeight(e.prototype) < smallestCapacity) {
-
-                    smallestCapacity = network.getEdgeWeight(e.prototype);
+                if (networkCopy.getEdgeWeight(e) < smallestWeight){
+                    smallestCapacity = e.capacity;
                 }
 
 
@@ -140,20 +140,23 @@ public class GargAndKoenemannMMCFImp<V, E>
 
             //update length and flow(value)
 
-            for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
-                networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + accuracy * (smallestCapacity / network.getEdgeWeight(e.prototype)));
-                e.flow += smallestCapacity;
-                System.out.println(networkCopy.getEdgeWeight(e) + "flow");
+            for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
+                System.out.println(e.getSource().toString()+networkCopy.getEdgeWeight(e));
+                networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + accuracy * (smallestCapacity / e.capacity));
+                e.flow = e.flow + smallestCapacity;
+
             }
-
-
-            //shortestPath.getEdgeList().forEach(e -> e, maxMultiCommodityFlow.get(e) + c));
-            //shortestPath.getEdgeList().forEach(e -> network.setEdgeWeight(e, network.getEdgeWeight(e) * (1 + ((0.1 * c) / lenghtOfEdges.get(e)))));
-            //  maxFlowValue+=c;
-            // }
+            System.out.println(this.networkCopy);
 
 
         }
+
+
+        //scale the flow
+       for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+
+           e.flow = (e.flow* Math.log(1 + accuracy)) / (Math.log((1 + accuracy) / delta));
+       }
     }
 
 
