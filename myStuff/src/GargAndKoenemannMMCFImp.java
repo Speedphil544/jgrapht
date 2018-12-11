@@ -34,7 +34,7 @@ public class GargAndKoenemannMMCFImp<V, E>
 
     /**
      * Constructor. Constructs a new network on which we will calculate the maximum flow, using
-     * Dinic algorithm.
+     * GargAndKoenemann algorithm.
      *
      * @param network the network on which we calculate the maximum flow.
      * @param epsilon the tolerance for the comparison of floating point values.
@@ -199,6 +199,9 @@ public class GargAndKoenemannMMCFImp<V, E>
         maxFlowValue /= (Math.log((1 + accuracy) / delta));
     }
 
+
+
+    // probably not needed??
 
     private VertexExtension getVertexExtension(V v) {
         return (VertexExtension) vertexExtensionManager.getExtension(v);

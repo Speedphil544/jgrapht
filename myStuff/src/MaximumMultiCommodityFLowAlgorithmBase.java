@@ -98,8 +98,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
         //needed for delta
 
-        //AllDirectedPaths alldircectedPaths = new AllDirectedPaths(this.network);
-        //List<GraphPath> allPaths = alldircectedPaths.getAllPaths(this.source, this.sink, false, null);
+
 
         double lengthOfLongestPath = 2.0;
         //for (GraphPath path : allPaths) {
@@ -138,6 +137,34 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         sourcePartition = null;
         sinkPartition = null;
         cutEdges = null;
+
+
+        /* does not work yet
+        // accuracy
+
+        this.accuracy = 0.1;
+
+        // needed for delta
+        double lengthOfLongestPath = 0.0;
+        AllDirectedPaths alldircectedPaths = new AllDirectedPaths(this.network);
+
+        for (int i = 0; i < sources.size(); i++) {
+            List<GraphPath> allPaths = alldircectedPaths.getAllPaths(this.sources.get(i), this.sinks.get(i), true, null);
+
+            for (GraphPath path : allPaths) {
+                if (path.getLength() > lengthOfLongestPath)
+                    lengthOfLongestPath = path.getLength();
+
+            }
+        }
+
+
+        //delta
+        this.delta = (1 + accuracy) * Math.pow((1 + accuracy) * lengthOfLongestPath, -1 / accuracy);
+        this.delta=0.1;
+
+        */
+
     }
 
     /**
