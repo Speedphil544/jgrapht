@@ -18,7 +18,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      * @param sinks   sink of the flow inside the network
      * @return maximum flow
      */
-    MaximumFlow<E> getMaximumFlow( List<V> sources, List<V> sinks);
+    MaximumFlow<E> getMaximumFlow( List<V> sources, List<V> sinks,double accuracy);
 
     /**
      * Sets current source to <tt>source</tt>, current sink to <tt>sink</tt>, then calculates
@@ -30,8 +30,8 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      * @param sinks   sink vertex
      * @return the value of the maximum flow
      */
-    default double getMaximumFlowValue(List<V> sources, List<V> sinks) {
-        return getMaximumFlow(sources, sinks).getValue();
+    default double getMaximumFlowValue(List<V> sources, List<V> sinks,double accuracy) {
+        return getMaximumFlow(sources, sinks,accuracy).getValue();
     }
 
     /**

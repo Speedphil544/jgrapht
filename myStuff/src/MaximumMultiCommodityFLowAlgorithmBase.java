@@ -47,12 +47,16 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
     protected double maxFlowValue = -1;
     /* Mapping of the flow on each edge. */
     protected Map<E, Double> maxFlow = null;
+
+
+
+
     /* Source parition of S-T cut */
-    protected Set<V> sourcePartition;
+    // protected Set<V> sourcePartition;
     /* Sink parition of S-T cut */
-    protected Set<V> sinkPartition;
+    //protected Set<V> sinkPartition;
     /* Cut edges */
-    protected Set<E> cutEdges;
+    //protected Set<E> cutEdges;
 
 
     //internal copy net
@@ -88,9 +92,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
         this.networkCopy = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
 
-        // accuracy
 
-        this.accuracy = 1 - Math.pow(1 + epsilon, -0.5);
 
 
     }
@@ -106,7 +108,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
      * @param edgeExtensionFactory   edge extension factory
      * @param <VE>                   vertex extension type
      */
-    protected <VE extends VertexExtensionBase> void init(
+    protected <VE extends VertexExtensionBase> void init(double accuracy,
             List<V> sources, List<V> sinks, ExtensionFactory<VE> vertexExtensionFactory,
             ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory) {
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
@@ -122,7 +124,14 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
         //former not here
         // accuracy
-        this.accuracy = 0.1;
+
+
+        // accuracy
+
+        this.accuracy = 1 - Math.pow(1 + accuracy, -0.5);
+
+
+
         // needed for delta
         double lengthOfLongestPath = 0.0;
         AllDirectedPaths alldirectedPaths = new AllDirectedPaths(this.network);
@@ -473,89 +482,6 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
             return inverseEdge.getTarget().prototype;
     }
 
-
-
-    /*---------------- Minimum s-t cut related methods -------------------*/
-/*
-    @Override
-    public double calculateMinCut(V source, V sink) {
-        return this.getMaximumFlowValue(source, sink);
-    }
-
-    @Override
-    public double getCutCapacity() {
-        return getMaximumFlowValue();
-    }
-
-    @Override
-
-
-    public Set<V> getSourcePartition() {
-        if (sourcePartition == null)
-           calculateSourcePartition();
-        return sourcePartition;
-    }
-
-    @Override
-    public Set<V> getSinkPartition() {
-        if (sinkPartition == null) {
-            sinkPartition = new LinkedHashSet<>(network.vertexSet());
-            sinkPartition.removeAll(this.getSourcePartition());
-        }
-        return sinkPartition;
-    }
-
-    @Override
-    public Set<E> getCutEdges() {
-        if (cutEdges != null)
-            return cutEdges;
-        cutEdges = new LinkedHashSet<>();
-
-        Set<V> p1 = getSourcePartition();
-        if (directedGraph) {
-            for (V vertex : p1) {
-                cutEdges.addAll(
-                        network
-                                .outgoingEdgesOf(vertex).stream()
-                                .filter(edge -> !p1.contains(network.getEdgeTarget(edge)))
-                                .collect(Collectors.toList()));
-            }
-        } else {
-            cutEdges.addAll(
-                    network
-                            .edgeSet().stream()
-                            .filter(
-                                    e -> p1.contains(network.getEdgeSource(e))
-                                            ^ p1.contains(network.getEdgeTarget(e)))
-                            .collect(Collectors.toList()));
-        }
-        return cutEdges;
-    }
-*/
-    /**
-     * Calculate the set of reachable vertices from $s$ in the residual graph.
-     */
-
-
-    /*
-
-    protected void calculateSourcePartition() {
-        // the source partition contains all vertices reachable from s in the residual graph
-        this.sourcePartition = new LinkedHashSet<>();
-        Queue<VertexExtensionBase> processQueue = new LinkedList<>();
-        processQueue.add(vertexExtensionManager.getExtension(getCurrentSource()));
-        while (!processQueue.isEmpty()) {
-            VertexExtensionBase vx = processQueue.poll();
-            if (sourcePartition.contains(vx.prototype))
-                continue;
-            sourcePartition.add(vx.prototype);
-            for (AnnotatedFlowEdge ex : vx.getOutgoing()) {
-                if (ex.hasCapacity())
-                    processQueue.add(ex.getTarget());
-            }
-        }
-    }
-    */
 }
 
 

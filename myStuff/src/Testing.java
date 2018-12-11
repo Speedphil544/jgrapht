@@ -31,7 +31,7 @@ public class Testing {
         directedGraph.setEdgeWeight("b1", "c", 1.0);
 
 
-        GargAndKoenemannMMCFImp alg = new GargAndKoenemannMMCFImp(directedGraph);
+        GargAndKoenemannMMCFImp alg = new GargAndKoenemannMMCFImp(directedGraph,0.1);
 
 
         DinicMFImpl dinic = new DinicMFImpl(directedGraph);
@@ -45,7 +45,7 @@ public class Testing {
         sinks.add("c");
         sinks.add("b");
         //System.out.println(sources);
-        alg.getMaximumFlow(sources, sinks);
+        alg.getMaximumFlow(sources, sinks,0.005);
         // System.out.println(alg.networkCopy);
 
         Map flow = alg.composeFlow();

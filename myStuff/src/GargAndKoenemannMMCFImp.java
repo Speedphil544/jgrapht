@@ -66,8 +66,8 @@ public class GargAndKoenemannMMCFImp<V, E>
     }
 
     @Override
-    public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks) {
-        this.calculateMaxFlow(sources, sinks);
+    public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks,double accuracy) {
+        this.calculateMaxFlow(sources, sinks,accuracy);
         maxFlow = composeFlow();
         return new MaximumMultiCommodityFlowImpl<>(maxFlowValue, maxFlow);
     }
@@ -80,9 +80,9 @@ public class GargAndKoenemannMMCFImp<V, E>
      * @param sinks   sink vertex.
      * @return the value of the maximum flow in the network.
      */
-    private double calculateMaxFlow(List<V> sources, List<V> sinks) {
+    private double calculateMaxFlow(List<V> sources, List<V> sinks, double accuracy) {
 
-        super.init(sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
+        super.init(accuracy,sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
 
         if (sources == (null)) {
             throw new IllegalArgumentException("Network does not contain sources!");
