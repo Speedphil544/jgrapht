@@ -1,7 +1,5 @@
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
-import org.jgrapht.alg.interfaces.MaximumFlowAlgorithm;
-import org.jgrapht.alg.interfaces.MinimumSTCutAlgorithm;
 import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.alg.util.extension.Extension;
@@ -11,7 +9,6 @@ import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 
 /**
@@ -26,8 +23,7 @@ import java.util.stream.Collectors;
  */
 public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         implements
-        MaximumMultiCommodityFlowAlgorithm<V, E>
-         {
+        MaximumMultiCommodityFlowAlgorithm<V, E> {
     /**
      * Default tolerance.
      */
@@ -94,22 +90,9 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
         // accuracy
 
-        this.accuracy = 0.1;
-
-        //needed for delta
+        this.accuracy = 1 - Math.pow(1 + epsilon, -0.5);
 
 
-
-        double lengthOfLongestPath = 2.0;
-        //for (GraphPath path : allPaths) {
-         //   if (allPaths.size() > lengthOfLongestPath)
-          //      lengthOfLongestPath = allPaths.size();
-
-        //}
-
-
-        // delta
-        this.delta = (1 + accuracy) * Math.pow((1 + accuracy) * lengthOfLongestPath, -1 / accuracy);
     }
 
 
@@ -117,7 +100,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
      * Prepares all data structures to start a new invocation of the Maximum Flow or Minimum Cut
      * algorithms
      *
-     * @param sources                 source
+     * @param sources                source
      * @param sinks                  sink
      * @param vertexExtensionFactory vertex extension factory
      * @param edgeExtensionFactory   edge extension factory
@@ -129,27 +112,23 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
 
-        buildInternal();
+
+        // need to change reihenfolge?
+
+
+        // former #2
         this.sources = sources;
         this.sinks = sinks;
-        maxFlowValue = 0;
-        maxFlow = null;
-        sourcePartition = null;
-        sinkPartition = null;
-        cutEdges = null;
 
-
-        /* does not work yet
+        //former not here
         // accuracy
-
         this.accuracy = 0.1;
-
         // needed for delta
         double lengthOfLongestPath = 0.0;
-        AllDirectedPaths alldircectedPaths = new AllDirectedPaths(this.network);
+        AllDirectedPaths alldirectedPaths = new AllDirectedPaths(this.network);
 
         for (int i = 0; i < sources.size(); i++) {
-            List<GraphPath> allPaths = alldircectedPaths.getAllPaths(this.sources.get(i), this.sinks.get(i), true, null);
+            List<GraphPath> allPaths = alldirectedPaths.getAllPaths(this.sources.get(i), this.sinks.get(i), true, null);
 
             for (GraphPath path : allPaths) {
                 if (path.getLength() > lengthOfLongestPath)
@@ -161,9 +140,21 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
         //delta
         this.delta = (1 + accuracy) * Math.pow((1 + accuracy) * lengthOfLongestPath, -1 / accuracy);
-        this.delta=0.1;
 
-        */
+
+        // former #1
+        buildInternal();
+
+
+        maxFlowValue = 0;
+        maxFlow = null;
+
+
+/*
+        sourcePartition = null;
+        sinkPartition = null;
+        cutEdges = null;
+*/
 
     }
 
@@ -180,8 +171,6 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 vx.prototype = v;
-
-
 
 
                 networkCopy.addVertex(vx);
@@ -246,12 +235,11 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
                 VertexExtensionBase vx =
                         vertexExtensionManager.getExtension(network.getEdgeTarget(e));
                 AnnotatedFlowEdge forwardEdge = createEdge(ux, vx, e, network.getEdgeWeight(e));
-             //   AnnotatedFlowEdge backwardEdge = createBackwardEdge(forwardEdge);
+                //   AnnotatedFlowEdge backwardEdge = createBackwardEdge(forwardEdge);
                 ux.getOutgoing().add(forwardEdge);
-             //   vx.getOutgoing().add(backwardEdge);
+                //   vx.getOutgoing().add(backwardEdge);
             }
         }
-
 
 
     }

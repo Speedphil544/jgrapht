@@ -136,23 +136,30 @@ public class GargAndKoenemannMMCFImp<V, E>
             //choose shortest path, its value
             DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
 
-            double shortestPathLength = 100000;
+            double shortestPathWeight = Double.POSITIVE_INFINITY;
 
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
 
             for (int i = 0; i < this.sinks.size(); i++) {
 
                 GraphPath<VertexExtensionBase, AnnotatedFlowEdge> newPath = dijkstra.getPath(getVertexExtension(this.sources.get(i)), getVertexExtension(this.sinks.get(i)));
-                if (newPath.getLength() < shortestPathLength) {
-                    shortestPath = newPath;
-                    shortestPathLength = shortestPath.getWeight();
+
+
+                // control if there is no path?
+
+                if (newPath != null) {
+
+                    if (comparator.compare(newPath.getWeight(), shortestPathWeight) < 0) {
+                        shortestPath = newPath;
+                        shortestPathWeight = newPath.getWeight();
+                    }
                 }
 
             }
 
 
             // breaking condition, we stop when shortest path hast length bigger or equal to 1`
-            if (shortestPath.getWeight() >= 1) {
+            if (comparator.compare(shortestPath.getWeight(), 1.0) >= 0) {
                 break;
             }
 
@@ -160,12 +167,12 @@ public class GargAndKoenemannMMCFImp<V, E>
             //get smallest capacity
 
 
-            Double smallestCapacity = 10000.0;
+            Double smallestCapacity = Double.POSITIVE_INFINITY;
 
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
 
                 double newCapacity = networkCopy.getEdgeWeight(e);
-                if (newCapacity < smallestCapacity) {
+                if (comparator.compare(newCapacity, smallestCapacity) < 0) {
                     smallestCapacity = e.capacity;
 
                 }
@@ -198,7 +205,6 @@ public class GargAndKoenemannMMCFImp<V, E>
         maxFlowValue *= Math.log(1 + accuracy);
         maxFlowValue /= (Math.log((1 + accuracy) / delta));
     }
-
 
 
     // probably not needed??
