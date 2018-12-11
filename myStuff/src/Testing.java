@@ -45,7 +45,7 @@ public class Testing {
         sinks.add("c");
         sinks.add("b");
         //System.out.println(sources);
-        alg.getMaximumFlow(sources, sinks,0.005);
+        alg.getMaximumFlow(sources, sinks,0.00001);
         // System.out.println(alg.networkCopy);
 
         Map flow = alg.composeFlow();

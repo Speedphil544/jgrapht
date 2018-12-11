@@ -150,7 +150,11 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         //delta
         this.delta = (1 + accuracy) * Math.pow((1 + accuracy) * lengthOfLongestPath, -1 / accuracy);
 
-
+        // check delta
+        if(comparator.compare(0.0,delta)==0){
+            System.out.println("delta=0");
+            System.exit(0);
+        }
         // former #1
         buildInternal();
 
