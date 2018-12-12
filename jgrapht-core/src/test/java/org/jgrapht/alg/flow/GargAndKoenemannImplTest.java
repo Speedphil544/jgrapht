@@ -2,11 +2,16 @@ package org.jgrapht.alg.flow;
 
 import org.jgrapht.Graph;
 import org.jgrapht.alg.interfaces.MaximumFlowAlgorithm;
+import org.jgrapht.alg.interfaces.MaximumMultiCommodityFlowAlgorithm;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.Before;
 import org.junit.Test;
 import
+
+import java.util.LinkedList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 
 public class GargAndKoenemannImplTest extends MaximumFlowAlgorithmTest {
@@ -14,7 +19,7 @@ public class GargAndKoenemannImplTest extends MaximumFlowAlgorithmTest {
 
     private DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> g;
 
-    private MaximumFlowAlgorithm<String, DefaultWeightedEdge> dinic;
+    private MaximumMultiCommodityFlowAlgorithm<String, DefaultWeightedEdge> gargAndKoenemann;
 
     private DefaultWeightedEdge edge;
 
@@ -25,10 +30,10 @@ public class GargAndKoenemannImplTest extends MaximumFlowAlgorithmTest {
     private final String v3 = "v3";
 
     @Override
-    MaximumFlowAlgorithm<Integer, DefaultWeightedEdge> createSolver(
+    MaximumMultiCommodityFlowAlgorithm<Integer, DefaultWeightedEdge> createSolver(
             Graph<Integer, DefaultWeightedEdge> network)
     {
-        return new DinicMFImpl<>(network);
+        return new GargAndKoenemannMMCFImp<>(network);
     }
 
     @Before
@@ -45,9 +50,14 @@ public class GargAndKoenemannImplTest extends MaximumFlowAlgorithmTest {
         edge = g.addEdge(v1, v2);
         g.setEdgeWeight(edge, 100.0);
 
+        List sources = new LinkedList();
+        sources.add(v1);
+        List sinks = new LinkedList();
+        sinks.add(v1);
+        double accuracy =0.1;
 
-        dinic = new Garg<>(g);
-        double flow = dinic.getMaximumFlowValue(v1, v2);
+        gargAndKoenemann =  new GargAndKoenemannMMCFImp<>(g);
+        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks,accuracy);
         assertEquals(100.0, flow, 0);
     }
 
