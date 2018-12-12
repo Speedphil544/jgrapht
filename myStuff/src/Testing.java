@@ -2,6 +2,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.alg.flow.DinicMFImpl;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DefaultWeightedEdge;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,8 +14,8 @@ public class Testing {
     public static void main(String[] args) {
 
 
-        Graph<String, DefaultEdge> directedGraph =
-                new DefaultDirectedWeightedGraph<>(DefaultEdge.class);
+        Graph<String, DefaultWeightedEdge> directedGraph =
+                new DefaultDirectedWeightedGraph<>(DefaultWeightedEdge.class);
         directedGraph.addVertex("a");
         directedGraph.addVertex("b1");
         directedGraph.addVertex("b");
@@ -25,9 +26,9 @@ public class Testing {
         directedGraph.addEdge("a", "b1");
         directedGraph.addEdge("b1", "c");
 
-        directedGraph.setEdgeWeight("a", "b", 20.0);
+        directedGraph.setEdgeWeight("a", "b", 0.0);
         directedGraph.setEdgeWeight("b", "c", 100.0);
-        directedGraph.setEdgeWeight("a", "b1", 500.0);
+        directedGraph.setEdgeWeight("a", "b1", 0.0);
         directedGraph.setEdgeWeight("b1", "c", 100.0);
 
 
@@ -45,13 +46,9 @@ public class Testing {
         // System.out.println(alg.networkCopy);
 
         Map flow = alg.composeFlow();
-        System.out.println(flow.get(directedGraph.getEdge("a","b1")));
+        System.out.println(flow);
         System.out.println(alg.getMaximumFlowValue());
 
-        //       DijkstraShortestPath dijkstra = new DijkstraShortestPath(directedGraph);
-        //GraphPath shortestPath = dijkstra.getPath("a", "c");
-
-        //System.out.println(shortestPath.getWeight());
 
 
     }

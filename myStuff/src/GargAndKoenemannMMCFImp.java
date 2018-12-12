@@ -8,7 +8,6 @@ import org.jgrapht.alg.interfaces.ShortestPathAlgorithm.SingleSourcePaths;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 import org.junit.Assert;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,15 +26,12 @@ public class GargAndKoenemannMMCFImp<V, E>
      * Current source vertex.
      */
     private List<VertexExtension> currentSources;
-
     /**
      * Current sink vertex.
      */
     private List<VertexExtension> currentSinks;
-
     private final ExtensionFactory<VertexExtension> vertexExtensionsFactory;
     private final ExtensionFactory<AnnotatedFlowEdge> edgeExtensionsFactory;
-
     /**
      * Constructor. Constructs a new network on which we will calculate the maximum flow, using
      * GargAndKoenemann algorithm.
@@ -139,8 +135,6 @@ public class GargAndKoenemannMMCFImp<V, E>
             networkCopy.setEdgeWeight(annotatedFlowEdge, 0.0);
 
         }
-
-
         while (true) {
 
             //choose shortest path, its value
@@ -149,24 +143,25 @@ public class GargAndKoenemannMMCFImp<V, E>
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
             SingleSourcePaths allPaths = dijkstra.getPaths(vertexExtensionManager.getExtension(null));
 
-            Assert.assertNotNull("no valid paths",allPaths);
+            // check if there are no paths
+            boolean pathsExist = false;
 
             for (VertexExtension sink : currentSinks) {
                 GraphPath newPath = allPaths.getPath(sink);
-                double newPathWeight = newPath.getWeight();
                 if (newPath != null) {
+                    pathsExist=true;
+                    double newPathWeight = newPath.getWeight();
                     if (comparator.compare(newPathWeight, shortestPathWeight) < 0) {
                         shortestPathWeight = newPathWeight;
                         shortestPath = newPath;
                     }
                 }
             }
-
+            Assert.assertTrue("no valid paths exist",pathsExist);
             // breaking condition, we stop when shortest path hast length bigger or equal to 1`
             if (comparator.compare(shortestPath.getWeight(), 1.0) >= 0) {
                 break;
             }
-
             //get smallest capacity
             Double smallestCapacity = Double.POSITIVE_INFINITY;
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
@@ -175,10 +170,8 @@ public class GargAndKoenemannMMCFImp<V, E>
                     smallestCapacity = e.capacity;
                 }
             }
-
             //update length and flow(value)
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
-                //System.out.println(e.getSource().toString() + networkCopy.getEdgeWeight(e));
                 networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + networkCopy.getEdgeWeight(e) * accuracy * (smallestCapacity / e.capacity));
                 e.flow = e.flow + smallestCapacity;
             }

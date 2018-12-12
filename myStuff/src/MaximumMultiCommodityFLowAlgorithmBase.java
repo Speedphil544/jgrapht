@@ -8,7 +8,10 @@ import org.jgrapht.alg.util.extension.ExtensionManager;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.junit.Assert;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 
@@ -110,7 +113,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         this.delta = (1 + accuracy) * Math.pow((1 + accuracy) * lengthOfLongestPath, -1 / accuracy);
 
         // check if delta is zero -> exit programm
-        Assert.assertNotEquals("DELTA IS TOO CLOSE TO ZERO",comparator.compare(0.0,delta),0);
+        Assert.assertNotEquals("DELTA IS TOO CLOSE TO ZERO", comparator.compare(0.0, delta), 0);
         buildInternal();
         maxFlowValue = 0;
         maxFlow = null;
@@ -131,17 +134,18 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
             // add edges to network copy
             for (E e : network.edgeSet()) {
-
-                // cant access single vertex of networkCopy
                 V u = network.getEdgeTarget(e);
                 VertexExtensionBase ux = vertexExtensionManager.getExtension(u);
                 V v = network.getEdgeSource(e);
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 AnnotatedFlowEdge edgeCopy = createEdge(vx, ux, e, network.getEdgeWeight(e));
-                networkCopy.addEdge(vx, ux, edgeCopy);
-                networkCopy.setEdgeWeight(vx,ux, delta);
-            }
 
+                // get rid of edges with zero capacity
+                if (comparator.compare(edgeCopy.capacity, 0.0) > 0) {
+                    networkCopy.addEdge(vx, ux, edgeCopy);
+                    networkCopy.setEdgeWeight(vx, ux, delta);
+                }
+            }
 /*
             for (V u : network.vertexSet()) {
                 VertexExtensionBase ux = vertexExtensionManager.getExtension(u);
@@ -288,8 +292,6 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         V prototype;
 
 
-
-
         // to String override
 
         public String toString() {
@@ -297,8 +299,8 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         }
 
         //public List<AnnotatedFlowEdge> getOutgoing() {
-          //  return outgoing;
-       // }
+        //  return outgoing;
+        // }
     }
 
     class AnnotatedFlowEdge
