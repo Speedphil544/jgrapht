@@ -6,6 +6,7 @@ import org.jgrapht.alg.util.extension.Extension;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 import org.jgrapht.alg.util.extension.ExtensionManager;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
+import org.junit.Assert;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -47,32 +48,14 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
     protected double maxFlowValue = -1;
     /* Mapping of the flow on each edge. */
     protected Map<E, Double> maxFlow = null;
-
-
-
-
-    /* Source parition of S-T cut */
-    // protected Set<V> sourcePartition;
-    /* Sink parition of S-T cut */
-    //protected Set<V> sinkPartition;
-    /* Cut edges */
-    //protected Set<E> cutEdges;
-
-
-    //internal copy net
-
-
+    /* A copy of the network, that uses a length function as weights, needed for dijkstraShortestPath*/
     public Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopy;
-
-
-    // delta
-
+    // the weight that the copied edges are initialized with
     protected double delta = 0;
-
-    // accuracy
-
+    // accuracy depending on the wanted approximation rate
     protected double accuracy = 0;
-
+    // save a little bit of computation time
+    int demandSize = 0;
 
     /**
      * Construct a new maximum flow
@@ -81,22 +64,15 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
      * @param epsilon the tolerance for the comparison of floating point values
      */
     public MaximumMultiCommodityFLowAlgorithmBase(Graph<V, E> network, double epsilon) {
+
         this.network = network;
         this.directedGraph = network.getType().isDirected();
         this.comparator = new ToleranceDoubleComparator(epsilon);
-
-
         // network copy
         Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
         Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
-
         this.networkCopy = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
-
-
-
-
     }
-
 
     /**
      * Prepares all data structures to start a new invocation of the Maximum Flow or Minimum Cut
@@ -109,33 +85,19 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
      * @param <VE>                   vertex extension type
      */
     protected <VE extends VertexExtensionBase> void init(double accuracy,
-            List<V> sources, List<V> sinks, ExtensionFactory<VE> vertexExtensionFactory,
-            ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory) {
+                                                         List<V> sources, List<V> sinks, ExtensionFactory<VE> vertexExtensionFactory,
+                                                         ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory) {
+
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
-
-
-        // need to change reihenfolge?
-
-
-        // former #2
         this.sources = sources;
         this.sinks = sinks;
-
-        //former not here
-        // accuracy
-
-
-        // accuracy
-
         this.accuracy = 1 - Math.pow(1 + accuracy, -0.5);
+        this.demandSize = sinks.size();
 
-
-
-        // needed for delta
+        // needed for delta, maybe we should change this to the number of Edges...
         double lengthOfLongestPath = 0.0;
         AllDirectedPaths alldirectedPaths = new AllDirectedPaths(this.network);
-
         for (int i = 0; i < sources.size(); i++) {
             List<GraphPath> allPaths = alldirectedPaths.getAllPaths(this.sources.get(i), this.sinks.get(i), true, null);
 
@@ -145,30 +107,13 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
             }
         }
-
-
-        //delta
         this.delta = (1 + accuracy) * Math.pow((1 + accuracy) * lengthOfLongestPath, -1 / accuracy);
 
-        // check delta
-        if(comparator.compare(0.0,delta)==0){
-            System.out.println("delta=0");
-            System.exit(0);
-        }
-        // former #1
+        // check if delta is zero -> exit programm
+        Assert.assertNotEquals("DELTA IS TOO CLOSE TO ZERO",comparator.compare(0.0,delta),0);
         buildInternal();
-
-
         maxFlowValue = 0;
         maxFlow = null;
-
-
-/*
-        sourcePartition = null;
-        sinkPartition = null;
-        cutEdges = null;
-*/
-
     }
 
     /**
@@ -177,43 +122,24 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
     void buildInternal() {
         if (directedGraph) { // Directed graph
 
-
             // add vertices to networkCopy
-
-
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 vx.prototype = v;
-
-
                 networkCopy.addVertex(vx);
-
-
             }
 
-
             // add edges to network copy
-
-
             for (E e : network.edgeSet()) {
 
-
-                V v = network.getEdgeTarget(e);
-                VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
-
-                V u = network.getEdgeSource(e);
+                // cant access single vertex of networkCopy
+                V u = network.getEdgeTarget(e);
                 VertexExtensionBase ux = vertexExtensionManager.getExtension(u);
-
-                AnnotatedFlowEdge edgeCopy = createEdge(ux, vx, e, network.getEdgeWeight(e));
-
-                edgeCopy.prototype = e;
-
-
-                networkCopy.addEdge(vertexExtensionManager.getExtension(network.getEdgeSource(e)), vertexExtensionManager.getExtension(network.getEdgeTarget(e)), edgeCopy);
-
-
-                networkCopy.setEdgeWeight(vertexExtensionManager.getExtension(network.getEdgeSource(e)), vertexExtensionManager.getExtension(network.getEdgeTarget(e)), delta);
-
+                V v = network.getEdgeSource(e);
+                VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
+                AnnotatedFlowEdge edgeCopy = createEdge(vx, ux, e, network.getEdgeWeight(e));
+                networkCopy.addEdge(vx, ux, edgeCopy);
+                networkCopy.setEdgeWeight(vx,ux, delta);
             }
 
 /*
@@ -249,7 +175,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
                         vertexExtensionManager.getExtension(network.getEdgeTarget(e));
                 AnnotatedFlowEdge forwardEdge = createEdge(ux, vx, e, network.getEdgeWeight(e));
                 //   AnnotatedFlowEdge backwardEdge = createBackwardEdge(forwardEdge);
-                ux.getOutgoing().add(forwardEdge);
+                //ux.getOutgoing().add(forwardEdge);
                 //   vx.getOutgoing().add(backwardEdge);
             }
         }
@@ -257,7 +183,10 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
 
     }
 
-    private AnnotatedFlowEdge createEdge(
+
+    //  changed private to , to ensure that we can create dummy edges fo dijkstra
+
+    protected AnnotatedFlowEdge createEdge(
             VertexExtensionBase source, VertexExtensionBase target, E e, double weight) {
         AnnotatedFlowEdge ex = edgeExtensionManager.getExtension(e);
         ex.source = source;
@@ -352,11 +281,13 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
     class VertexExtensionBase
             implements
             Extension {
-        private final List<AnnotatedFlowEdge> outgoing = new ArrayList<>();
+
+
+        //private final List<AnnotatedFlowEdge> outgoing = new ArrayList<>();
 
         V prototype;
 
-        double excess;
+
 
 
         // to String override
@@ -365,9 +296,9 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
             return this.prototype.toString();
         }
 
-        public List<AnnotatedFlowEdge> getOutgoing() {
-            return outgoing;
-        }
+        //public List<AnnotatedFlowEdge> getOutgoing() {
+          //  return outgoing;
+       // }
     }
 
     class AnnotatedFlowEdge

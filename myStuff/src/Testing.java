@@ -25,31 +25,27 @@ public class Testing {
         directedGraph.addEdge("a", "b1");
         directedGraph.addEdge("b1", "c");
 
-        directedGraph.setEdgeWeight("a", "b", 5.0);
-        directedGraph.setEdgeWeight("b", "c", 1.0);
-        directedGraph.setEdgeWeight("a", "b1", .5);
-        directedGraph.setEdgeWeight("b1", "c", 1.0);
+        directedGraph.setEdgeWeight("a", "b", 20.0);
+        directedGraph.setEdgeWeight("b", "c", 100.0);
+        directedGraph.setEdgeWeight("a", "b1", 500.0);
+        directedGraph.setEdgeWeight("b1", "c", 100.0);
 
 
-        GargAndKoenemannMMCFImp alg = new GargAndKoenemannMMCFImp(directedGraph,0.1);
+        GargAndKoenemannMMCFImp alg = new GargAndKoenemannMMCFImp(directedGraph,Math.pow(10,-40));
 
-
-        DinicMFImpl dinic = new DinicMFImpl(directedGraph);
-        dinic.getMaximumFlow("a", "b");
-        System.out.println(dinic.getMaximumFlowValue());
 
         List<String> sources = new LinkedList<String>();
         sources.add("a");
-        sources.add("a");
+       // sources.add("a");
         List<String> sinks = new LinkedList<String>();
         sinks.add("c");
-        sinks.add("b");
+       //sinks.add("b");
         //System.out.println(sources);
-        alg.getMaximumFlow(sources, sinks,0.00001);
+        alg.getMaximumFlow(sources, sinks,0.01);
         // System.out.println(alg.networkCopy);
 
         Map flow = alg.composeFlow();
-        System.out.println(flow);
+        System.out.println(flow.get(directedGraph.getEdge("a","b1")));
         System.out.println(alg.getMaximumFlowValue());
 
         //       DijkstraShortestPath dijkstra = new DijkstraShortestPath(directedGraph);
