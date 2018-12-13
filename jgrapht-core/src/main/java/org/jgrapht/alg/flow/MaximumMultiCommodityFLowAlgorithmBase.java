@@ -100,7 +100,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
         this.accuracy = 1 - Math.pow(1 + accuracy, -0.5);
         this.demandSize = sinks.size();
 
-        // needed for delta, maybe we should change this to the number of Edges...
+        // needed for delta, maybe we should change this to the number of Edges...Problem mit falschem INput....
         double lengthOfLongestPath = 0.0;
         AllDirectedPaths alldirectedPaths = new AllDirectedPaths(this.network);
         for (int i = 0; i < sources.size(); i++) {

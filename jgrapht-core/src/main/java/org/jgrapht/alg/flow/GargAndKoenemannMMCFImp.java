@@ -85,7 +85,8 @@ public class GargAndKoenemannMMCFImp<V, E>
      * @return the value of the maximum flow in the network.
      */
     private double calculateMaxFlow(List<V> sources, List<V> sinks, double accuracy) {
-
+        //moved downwards
+        super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
 
         if (sources == (null)) {
             throw new IllegalArgumentException("Network does not contain sources!");
@@ -118,8 +119,7 @@ public class GargAndKoenemannMMCFImp<V, E>
         }
 
 
-        //moved downwards
-        super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
+
 
 
 
