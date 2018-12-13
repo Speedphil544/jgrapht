@@ -86,7 +86,6 @@ public class GargAndKoenemannMMCFImp<V, E>
      */
     private double calculateMaxFlow(List<V> sources, List<V> sinks, double accuracy) {
 
-        super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
 
         if (sources == (null)) {
             throw new IllegalArgumentException("Network does not contain sources!");
@@ -117,6 +116,15 @@ public class GargAndKoenemannMMCFImp<V, E>
             currentSinks.add(getVertexExtension(sinks.get(i)));
 
         }
+
+
+        //moved downwards
+        super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
+
+
+
+
+
 
         gargAndKoenemann();
 
