@@ -3,15 +3,12 @@ package org.jgrapht.alg.flow;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
-import org.jgrapht.alg.interfaces.ShortestPathAlgorithm.SingleSourcePaths;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 import org.junit.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 /*
  * @param <V> the graph vertex type.
@@ -34,6 +31,7 @@ public class GargAndKoenemannMMCFImp<V, E>
     private List<VertexExtension> currentSinks;
     private final ExtensionFactory<VertexExtension> vertexExtensionsFactory;
     private final ExtensionFactory<AnnotatedFlowEdge> edgeExtensionsFactory;
+
     /**
      * Constructor. Constructs a new network on which we will calculate the maximum flow, using
      * GargAndKoenemann algorithm.
@@ -119,13 +117,6 @@ public class GargAndKoenemannMMCFImp<V, E>
         }
 
 
-
-
-
-
-
-
-
         gargAndKoenemann();
 
         return maxFlowValue;
@@ -135,7 +126,7 @@ public class GargAndKoenemannMMCFImp<V, E>
      * /**
      */
     public void gargAndKoenemann() {
-
+/*
         // add a dummy to make dijkstra computation shorter
         networkCopy.addVertex(vertexExtensionManager.getExtension(null));
         for (VertexExtension source : currentSources) {
@@ -145,9 +136,14 @@ public class GargAndKoenemannMMCFImp<V, E>
             networkCopy.setEdgeWeight(annotatedFlowEdge, 0.0);
 
         }
+*/
+
+
         while (true) {
 
             //choose shortest path, its value
+
+            /*
             DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
             double shortestPathWeight = Double.POSITIVE_INFINITY;
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
@@ -167,7 +163,27 @@ public class GargAndKoenemannMMCFImp<V, E>
                     }
                 }
             }
-            Assert.assertTrue("no valid paths exist",pathsExist);
+
+            */
+            boolean pathsExist = false;
+            double shortestPathWeight = Double.POSITIVE_INFINITY;
+            GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
+            for (int i = 0; i < demandSize; i++) {
+                DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
+                GraphPath newPath = dijkstra.getPath(currentSources.get(i), currentSinks.get(i));
+                if (newPath != null) {
+                    pathsExist = true;
+                    double newPathWeight = newPath.getWeight();
+                    if (comparator.compare(newPathWeight, shortestPathWeight) < 0) {
+                        shortestPathWeight = newPathWeight;
+                        shortestPath = newPath;
+                    }
+
+                }
+            }
+
+
+            Assert.assertTrue("no valid paths exist", pathsExist);
             // breaking condition, we stop when shortest path hast length bigger or equal to 1`
             if (comparator.compare(shortestPath.getWeight(), 1.0) >= 0) {
                 break;

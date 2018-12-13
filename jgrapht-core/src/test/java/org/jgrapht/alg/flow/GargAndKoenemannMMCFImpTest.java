@@ -10,6 +10,7 @@ import org.junit.Test;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -34,6 +35,8 @@ public class GargAndKoenemannMMCFImpTest {
     private double epsilon = 1e-20;
 
     private final Comparator<Double> comparator = new ToleranceDoubleComparator(epsilon);
+
+    private double expectedFlow;
 
 
     @Before
@@ -86,7 +89,8 @@ public class GargAndKoenemannMMCFImpTest {
         System.out.println(flow);
     }
 
-    @Test // todo: change something in gargAndKoenemann so that we return zeroflow when there are no cennections between sources and sinks
+    @Test
+    // todo: change something in gargAndKoenemann so that we return zeroflow when there are no cennections between sources and sinks
     public void disconnectedTest() {
         g.addVertex(v1);
         g.addVertex(v2);
@@ -100,9 +104,9 @@ public class GargAndKoenemannMMCFImpTest {
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
         assertEquals(0.0, flow, 0);
     }
+
     @Test
-    public void simpleTest3()
-    {
+    public void simpleTest3() {
         g.addVertex(v1);
         g.addVertex(v2);
         g.addVertex(v3);
@@ -125,6 +129,41 @@ public class GargAndKoenemannMMCFImpTest {
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
         assertTrue(comparator.compare(Math.abs(2 - flow), approximationRate * 2) <= 0);
+    }
+
+    @Test
+    public void testWith2Demads() {
+        g.addVertex(v1);
+        g.addVertex(v2);
+        g.addVertex(v3);
+        String v4 = "v4";
+        String v5 = "v5";
+        String v6 = "v6";
+        g.addVertex(v4);
+        g.addVertex(v5);
+        g.addVertex(v6);
+        edge = g.addEdge(v1, v3);
+        g.setEdgeWeight(edge, 2.0);
+        edge = g.addEdge(v2, v3);
+        g.setEdgeWeight(edge, 2.0);
+        edge = g.addEdge(v3, v4);
+        g.setEdgeWeight(edge, 3.5);
+        edge = g.addEdge(v4, v5);
+        g.setEdgeWeight(edge, 2.0);
+        edge = g.addEdge(v4, v6);
+        g.setEdgeWeight(edge, 3.0);
+        List<String> sources = new LinkedList();
+        sources.add(v1);
+        sources.add(v2);
+        List<String> sinks = new LinkedList();
+        sinks.add(v5);
+        sinks.add(v6);
+
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
+        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
+        //Map flow = gargAndKoenemann.getFlowMap();
+        System.out.println(flow);
+        assertTrue(comparator.compare(Math.abs(3.5 - flow), approximationRate * 3.5) <= 0);
     }
 
 }
