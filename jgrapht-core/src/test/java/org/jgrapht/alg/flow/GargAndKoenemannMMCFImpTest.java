@@ -132,7 +132,7 @@ public class GargAndKoenemannMMCFImpTest {
     }
 
     @Test
-    public void testWith2Demads() {
+    public void testWith2Demands() {
         g.addVertex(v1);
         g.addVertex(v2);
         g.addVertex(v3);
@@ -158,12 +158,18 @@ public class GargAndKoenemannMMCFImpTest {
         List<String> sinks = new LinkedList();
         sinks.add(v5);
         sinks.add(v6);
-
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
-        //Map flow = gargAndKoenemann.getFlowMap();
-        System.out.println(flow);
+        Map flowmap = gargAndKoenemann.getFlowMap();
+
+        System.out.println(flowmap);
         assertTrue(comparator.compare(Math.abs(3.5 - flow), approximationRate * 3.5) <= 0);
     }
+
+
+
+
+
+
 
 }

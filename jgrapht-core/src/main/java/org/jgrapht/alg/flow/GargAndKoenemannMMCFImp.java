@@ -5,7 +5,6 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
-import org.junit.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,14 +18,14 @@ import java.util.List;
 
 public class GargAndKoenemannMMCFImp<V, E>
         extends
-        MaximumMultiCommodityFLowAlgorithmBase<V, E> {
+        MaximumMultiCommodityFlowAlgorithmBase<V, E> {
 
     /**
-     * Current source vertex.
+     * Current sources vertexList.
      */
     private List<VertexExtension> currentSources;
     /**
-     * Current sink vertex.
+     * Current sinks vertexList.
      */
     private List<VertexExtension> currentSinks;
     private final ExtensionFactory<VertexExtension> vertexExtensionsFactory;
@@ -183,7 +182,10 @@ public class GargAndKoenemannMMCFImp<V, E>
             }
 
 
-            Assert.assertTrue("no valid paths exist", pathsExist);
+            // if there are no valid paths, break and set flow = zeroMapping
+            if (!pathsExist) {
+                break;
+            } ;
             // breaking condition, we stop when shortest path hast length bigger or equal to 1`
             if (comparator.compare(shortestPath.getWeight(), 1.0) >= 0) {
                 break;

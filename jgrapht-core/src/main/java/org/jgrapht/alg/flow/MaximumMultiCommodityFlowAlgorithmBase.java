@@ -27,7 +27,7 @@ import org.jgrapht.alg.interfaces.*;
  * @author Alexey Kudinkin
  * @author Joris Kinable
  */
-public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
+public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         implements
         MaximumMultiCommodityFlowAlgorithm<V, E> {
     /**
@@ -68,7 +68,7 @@ public abstract class MaximumMultiCommodityFLowAlgorithmBase<V, E>
      * @param network the network
      * @param epsilon the tolerance for the comparison of floating point values
      */
-    public MaximumMultiCommodityFLowAlgorithmBase(Graph<V, E> network, double epsilon) {
+    public MaximumMultiCommodityFlowAlgorithmBase(Graph<V, E> network, double epsilon) {
 
         this.network = network;
         this.directedGraph = network.getType().isDirected();
