@@ -162,7 +162,8 @@ public class GargAndKoenemannMMCFImpTest {
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
         Map flowmap = gargAndKoenemann.getFlowMap();
 
-        System.out.println(flowmap);
+
+       //System.out.println(flowmap+" " +flow);
         assertTrue(comparator.compare(Math.abs(3.5 - flow), approximationRate * 3.5) <= 0);
     }
 

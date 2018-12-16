@@ -4,9 +4,11 @@ package org.jgrapht.alg.flow;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+import org.jgrapht.alg.util.Pair;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /*
@@ -31,6 +33,13 @@ public class GargAndKoenemannMMCFImp<V, E>
     private final ExtensionFactory<VertexExtension> vertexExtensionsFactory;
     private final ExtensionFactory<AnnotatedFlowEdge> edgeExtensionsFactory;
 
+
+    // try another data structure
+
+    private List<Pair<VertexExtension, VertexExtension>> currentDemands;
+    private Pair<VertexExtension, VertexExtension> currentDemandFlowIsPushedAlong;
+
+
     /**
      * Constructor. Constructs a new network on which we will calculate the maximum flow, using
      * GargAndKoenemann algorithm.
@@ -45,6 +54,7 @@ public class GargAndKoenemannMMCFImp<V, E>
         this.edgeExtensionsFactory = AnnotatedFlowEdge::new;
         currentSources = new ArrayList<>();
         currentSinks = new ArrayList<>();
+        currentDemands = new LinkedList<>();
 
         if (epsilon <= 0) {
             throw new IllegalArgumentException("Epsilon must be positive!");
@@ -82,7 +92,7 @@ public class GargAndKoenemannMMCFImp<V, E>
      * @return the value of the maximum flow in the network.
      */
     private double calculateMaxFlow(List<V> sources, List<V> sinks, double accuracy) {
-        //moved downwards
+
         super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
 
         if (sources == (null)) {
@@ -112,6 +122,9 @@ public class GargAndKoenemannMMCFImp<V, E>
         for (int i = 0; i < demandSize; i++) {
             currentSources.add(getVertexExtension(sources.get(i)));
             currentSinks.add(getVertexExtension(sinks.get(i)));
+            // try new data structure
+            currentDemands.add(new Pair(getVertexExtension(sources.get(i)), getVertexExtension(sinks.get(i))));
+
 
         }
 
@@ -125,57 +138,26 @@ public class GargAndKoenemannMMCFImp<V, E>
      * /**
      */
     public void gargAndKoenemann() {
-/*
-        // add a dummy to make dijkstra computation shorter
-        networkCopy.addVertex(vertexExtensionManager.getExtension(null));
-        for (VertexExtension source : currentSources) {
-            AnnotatedFlowEdge annotatedFlowEdge = createEdge(vertexExtensionManager.getExtension(null), source, null, Double.POSITIVE_INFINITY);
-            annotatedFlowEdge.capacity = Double.POSITIVE_INFINITY;
-            networkCopy.addEdge(vertexExtensionManager.getExtension(null), source, annotatedFlowEdge);
-            networkCopy.setEdgeWeight(annotatedFlowEdge, 0.0);
-
-        }
-*/
-
 
         while (true) {
 
-            //choose shortest path, its value
+            //choose shortest path, its value, its demand
 
-            /*
-            DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
-            double shortestPathWeight = Double.POSITIVE_INFINITY;
-            GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
-            SingleSourcePaths allPaths = dijkstra.getPaths(vertexExtensionManager.getExtension(null));
-
-            // check if there are no paths
-            boolean pathsExist = false;
-
-            for (VertexExtension sink : currentSinks) {
-                GraphPath newPath = allPaths.getPath(sink);
-                if (newPath != null) {
-                    pathsExist=true;
-                    double newPathWeight = newPath.getWeight();
-                    if (comparator.compare(newPathWeight, shortestPathWeight) < 0) {
-                        shortestPathWeight = newPathWeight;
-                        shortestPath = newPath;
-                    }
-                }
-            }
-
-            */
             boolean pathsExist = false;
             double shortestPathWeight = Double.POSITIVE_INFINITY;
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
-            for (int i = 0; i < demandSize; i++) {
+
+
+            for (Pair demand : currentDemands) {
                 DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
-                GraphPath newPath = dijkstra.getPath(currentSources.get(i), currentSinks.get(i));
+                GraphPath newPath = dijkstra.getPath(demand.getFirst(), demand.getSecond());
                 if (newPath != null) {
                     pathsExist = true;
                     double newPathWeight = newPath.getWeight();
                     if (comparator.compare(newPathWeight, shortestPathWeight) < 0) {
                         shortestPathWeight = newPathWeight;
                         shortestPath = newPath;
+                        currentDemandFlowIsPushedAlong = demand;
                     }
 
                 }
@@ -185,7 +167,8 @@ public class GargAndKoenemannMMCFImp<V, E>
             // if there are no valid paths, break and set flow = zeroMapping
             if (!pathsExist) {
                 break;
-            } ;
+            }
+            ;
             // breaking condition, we stop when shortest path hast length bigger or equal to 1`
             if (comparator.compare(shortestPath.getWeight(), 1.0) >= 0) {
                 break;
@@ -202,17 +185,29 @@ public class GargAndKoenemannMMCFImp<V, E>
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
                 networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + networkCopy.getEdgeWeight(e) * accuracy * (smallestCapacity / e.capacity));
                 e.flow = e.flow + smallestCapacity;
+                //demandFLowMap
+                e.demandFlows.put(new Pair<VertexExtensionBase, VertexExtensionBase>(currentDemandFlowIsPushedAlong.getFirst(), currentDemandFlowIsPushedAlong.getSecond()),
+                        e.demandFlows.get(currentDemandFlowIsPushedAlong) + smallestCapacity);
+
             }
             maxFlowValue += smallestCapacity;
         }
 
+
         //scale the flow
         for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+
+            for (Pair demand : currentDemands) {
+                e.demandFlows.put(demand, e.demandFlows.get(demand) * (Math.log(1 + accuracy)) / Math.log((1 + accuracy) / delta));
+            }
+
             e.flow *= Math.log(1 + accuracy);
             e.flow /= (Math.log((1 + accuracy) / delta));
         }
         maxFlowValue *= Math.log(1 + accuracy);
         maxFlowValue /= (Math.log((1 + accuracy) / delta));
+
+
     }
 
     private VertexExtension getVertexExtension(V v) {
