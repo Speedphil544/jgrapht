@@ -53,12 +53,12 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     protected Map<E, Double> maxFlow = null;
 
 
-
-    /* List of mappings for each demand*/
-
-
+    // new Data Structure[
+    /* List of mappings for each demand, */
     public Map<Pair<V, V>, Map<E, Double>> mapOfFlowsForEachDemand = null;
+    // ]new Data Structure
 
+    //toDo MaxFlowValueOfEachDemand
 
     /* A copy of the network, that uses a length function as weights, needed for dijkstraShortestPath*/
     public Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopy;
@@ -69,10 +69,9 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     // save a little bit of computation time
     int demandSize = 0;
 
-    //newDataStructure
-
+    //newDataStructure[ (Pairs of sources and sinks)
     List<Pair<VertexExtensionBase, VertexExtensionBase>> demands = null;
-
+    // ]new Data Structure
 
     /**
      * Construct a new maximum flow
@@ -111,21 +110,25 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         this.sinks = sinks;
         this.accuracy = 1 - Math.pow(1 + accuracy, -0.5);
         this.demandSize = sinks.size();
-        // new Data Structure
+        // new Data Structure[
         demands = new LinkedList<Pair<VertexExtensionBase, VertexExtensionBase>>();
+        // ]new Data Structure
         for (int i = 0; i < demandSize; i++) {
 
-            // try new datastructur
+
             VertexExtensionBase source = vertexExtensionManager.getExtension(this.sources.get(i));
             VertexExtensionBase sink = vertexExtensionManager.getExtension(this.sinks.get(i));
             source.prototype = this.sources.get(i);
             source.prototype = this.sinks.get(i);
+            // new datastructur[
             demands.add(new Pair(source, sink));
+            // ]new Data Structure
+
 
         }
 
 
-        // needed for delta, maybe we should change this to the number of Edges...Problem mit falschem INput....
+        // needed for delta, maybe we should change this to the number of Edges... Wrong Input results in Error
         double lengthOfLongestPath = 0.0;
         AllDirectedPaths alldirectedPaths = new AllDirectedPaths(this.network);
         for (int i = 0; i < sources.size(); i++) {
@@ -308,7 +311,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         Map<E, Double> maxFlow = new HashMap<>();
 
 
-        // new Data Structure
+        // new Data Structure[
 
         mapOfFlowsForEachDemand = new HashMap<>();
         for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
@@ -319,7 +322,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 mapOfFlowsForEachDemand.get(vDemand).put(e, 0.0);
             }
         }
-
+        // ]new Data Structure
 
         for (E e : network.edgeSet()) {
             AnnotatedFlowEdge annotatedFlowEdge = edgeExtensionManager.getExtension(e);
@@ -328,12 +331,15 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                             : Math.max(annotatedFlowEdge.flow, annotatedFlowEdge.inverse.flow));
 
 
-            // new Data Structure
+            // new Data Structure[
             for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
-                Pair<V,V> vDemand= new Pair(demand.getFirst().prototype, demand.getSecond().prototype);
+                Pair<V, V> vDemand = new Pair(demand.getFirst().prototype, demand.getSecond().prototype);
 
                 mapOfFlowsForEachDemand.get(vDemand).put(e, mapOfFlowsForEachDemand.get(vDemand).get(e) + annotatedFlowEdge.demandFlows.get(demand));
             }
+
+            //  ]new Data Structure
+
         }
 
         return maxFlow;
@@ -375,7 +381,10 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         // the flow already in this direction).
         double flow; // Flow in the direction denoted by this edge
 
-        Map<Pair<VertexExtensionBase, VertexExtensionBase>, Double> demandFlows; // Flow for each demand in the direction denoteed by the edge
+
+        // new Data Structure[
+        Map<Pair<VertexExtensionBase, VertexExtensionBase>, Double> demandFlows; // Flow for each demand in the direction denoted by the edge
+        // ]new Data Structure
 
         public <VE extends VertexExtensionBase> VE getSource() {
             return (VE) source;

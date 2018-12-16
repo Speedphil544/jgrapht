@@ -157,7 +157,9 @@ public class GargAndKoenemannMMCFImp<V, E>
                     if (comparator.compare(newPathWeight, shortestPathWeight) < 0) {
                         shortestPathWeight = newPathWeight;
                         shortestPath = newPath;
+                        // new Data Structure[
                         currentDemandFlowIsPushedAlong = demand;
+                        // ]new Data Structure
                     }
 
                 }
@@ -196,11 +198,11 @@ public class GargAndKoenemannMMCFImp<V, E>
 
         //scale the flow
         for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
-
+            // new Data Structure[
             for (Pair demand : currentDemands) {
                 e.demandFlows.put(demand, e.demandFlows.get(demand) * (Math.log(1 + accuracy)) / Math.log((1 + accuracy) / delta));
             }
-
+            // ]new Data Structure
             e.flow *= Math.log(1 + accuracy);
             e.flow /= (Math.log((1 + accuracy) / delta));
         }
