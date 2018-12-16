@@ -111,23 +111,95 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v2);
         g.addVertex(v3);
         String v4 = "v4";
+        String v5 = "v5";
+        String v6 = "v6";
+        String v7 = "v7";
+        String v8 = "v8";
+        String v9 = "v9";
+        String v10 = "v10";
+        String v11= "v11";
+        String v12= "v12";
+        String v13= "v13";
+        String v14 = "14";
+        String v15 = "v15";
+        String v16 = "v16";
+        String v17 = "v17";
+        String v18 = "v18";
+        String v19 = "v19";
+        String v20 = "v20";
+
         g.addVertex(v4);
+        g.addVertex(v5);
+        g.addVertex(v6);
+        g.addVertex(v7);
+        g.addVertex(v8);
+        g.addVertex(v9);
+        g.addVertex(v10);
+        g.addVertex(v11);
+        g.addVertex(v12);
+        g.addVertex(v13);
+        g.addVertex(v14);
+        g.addVertex(v15);
+        g.addVertex(v16);
+        g.addVertex(v17);
+        g.addVertex(v18);
+        g.addVertex(v19);
+        g.addVertex(v20);
+
+
+
         edge = g.addEdge(v1, v2);
         g.setEdgeWeight(edge, 2.0);
         edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, 2.0);
         edge = g.addEdge(v3, v4);
         g.setEdgeWeight(edge, 2.0);
-        edge = g.addEdge(v2, v4);
+        edge = g.addEdge(v4, v5);
         g.setEdgeWeight(edge, 1.0);
-        edge = g.addEdge(v1, v3);
+        edge = g.addEdge(v5, v6);
         g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v6, v7);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v7, v8);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v8, v9);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v9, v10);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v10, v11);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v11, v12);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v12, v13);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v13, v14);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v14, v15);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v15, v16);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v16, v17);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v17, v18);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v18, v19);
+        g.setEdgeWeight(edge, 1.0);
+        edge = g.addEdge(v19, v20);
+        g.setEdgeWeight(edge, 1.0);
+
+
+
+
+
         List<String> sources = new LinkedList();
         sources.add(v1);
+        sources.add(v1);
         List<String> sinks = new LinkedList();
-        sinks.add(v2);
+        sinks.add(v20);
+        sinks.add(v3);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
+        System.out.println(gargAndKoenemann.getFlow());
         assertTrue(comparator.compare(Math.abs(2 - flow), approximationRate * 2) <= 0);
     }
 
@@ -139,10 +211,22 @@ public class GargAndKoenemannMMCFImpTest {
         String v4 = "v4";
         String v5 = "v5";
         String v6 = "v6";
+        String v7 = "v7";
+        String v8 = "v8";
+        String v9 = "v9";
+        String v10 = "v10";
+        String v11= "v11";
+        String v12= "v12";
+        String v13= "v13";
+        String v14 = "14";
+        String v15 = "v15";
+        String v16 = "v16";
+        String v17 = "v17";
+        String v18 = "v18";
         g.addVertex(v4);
         g.addVertex(v5);
         g.addVertex(v6);
-        edge = g.addEdge(v1, v3);
+        edge = g.addEdge(v1, v2);
         g.setEdgeWeight(edge, 2.0);
         edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, 2.0);
@@ -158,7 +242,7 @@ public class GargAndKoenemannMMCFImpTest {
         List<String> sinks = new LinkedList();
         sinks.add(v5);
         sinks.add(v6);
-        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g,epsilon);
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
         Map flowmap = gargAndKoenemann.getFlowMap();
 

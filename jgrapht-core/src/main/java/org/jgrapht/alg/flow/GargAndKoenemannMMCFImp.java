@@ -170,9 +170,10 @@ public class GargAndKoenemannMMCFImp<V, E>
             if (!pathsExist) {
                 break;
             }
-            ;
-            // breaking condition, we stop when shortest path hast length bigger or equal to 1`
-            if (comparator.compare(shortestPath.getWeight(), 1.0) >= 0) {
+
+            // breaking condition, we stop when shortest path hast length bigger or equal to 1
+            double b = Math.pow(lengthOfLongestPath * (1 + this.accuracy), 1 / this.accuracy) / (1 + this.accuracy);
+            if (comparator.compare(shortestPath.getWeight(), delta * b) >= 0) {
                 break;
             }
             //get smallest capacity
@@ -197,20 +198,56 @@ public class GargAndKoenemannMMCFImp<V, E>
 
 
         //scale the flow
-        for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
-            // new Data Structure[
-            for (Pair demand : currentDemands) {
-                e.demandFlows.put(demand, e.demandFlows.get(demand) * (Math.log(1 + accuracy)) / Math.log((1 + accuracy) / delta));
-            }
-            // ]new Data Structure
-            e.flow *= Math.log(1 + accuracy);
-            e.flow /= (Math.log((1 + accuracy) / delta));
-        }
-        maxFlowValue *= Math.log(1 + accuracy);
-        maxFlowValue /= (Math.log((1 + accuracy) / delta));
+        scaleFlow();
 
 
     }
+
+
+    // method to scale the flow
+    private void scaleFlow() {
+
+        /*
+        for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+            // new Data Structure[
+            for (Pair demand : currentDemands) {
+                e.demandFlows.put(demand, e.demandFlows.get(demand) * (Math.log(1 + accuracy)) / Math.log((1 + accuracy) / delta2));
+            }
+            // ]new Data Structure
+            e.flow *= Math.log(1 + accuracy);
+            e.flow /= (Math.log((1 + accuracy) / delta2));
+        }
+        maxFlowValue *= Math.log(1 + accuracy);
+        maxFlowValue /= (Math.log((1 + accuracy) / delta2));
+    */
+
+        Double mostViolatedEdgeViolation = 0.0;
+        for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+            if (comparator.compare(e.flow / e.capacity, mostViolatedEdgeViolation) > 0) {
+
+                mostViolatedEdgeViolation = e.flow / e.capacity;
+
+            }
+
+        }
+        for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+
+
+            e.flow /= mostViolatedEdgeViolation;
+            for (Pair demand : currentDemands) {
+                e.demandFlows.put(demand, e.demandFlows.get(demand) / mostViolatedEdgeViolation);
+
+
+            }
+
+        }
+
+
+        maxFlowValue /= mostViolatedEdgeViolation;
+
+
+    }
+
 
     private VertexExtension getVertexExtension(V v) {
         return (VertexExtension) vertexExtensionManager.getExtension(v);

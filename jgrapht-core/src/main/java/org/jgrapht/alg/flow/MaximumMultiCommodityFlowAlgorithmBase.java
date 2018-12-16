@@ -68,6 +68,11 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     protected double accuracy = 0;
     // save a little bit of computation time
     int demandSize = 0;
+    double lengthOfLongestPath = 0.0;
+
+
+    double delta2 = 0.0;
+
 
     //newDataStructure[ (Pairs of sources and sinks)
     List<Pair<VertexExtensionBase, VertexExtensionBase>> demands = null;
@@ -100,7 +105,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      * @param edgeExtensionFactory   edge extension factory
      * @param <VE>                   vertex extension type
      */
-    protected <VE extends VertexExtensionBase> void init(double accuracy,
+    protected <VE extends VertexExtensionBase> void init(double approximationRate,
                                                          List<V> sources, List<V> sinks, ExtensionFactory<VE> vertexExtensionFactory,
                                                          ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory) {
 
@@ -108,7 +113,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
         this.sources = sources;
         this.sinks = sinks;
-        this.accuracy = 1 - Math.pow(1 + accuracy, -0.5);
+        this.accuracy = 1 - Math.pow(1 + approximationRate, -0.5);
         this.demandSize = sinks.size();
         // new Data Structure[
         demands = new LinkedList<Pair<VertexExtensionBase, VertexExtensionBase>>();
@@ -129,7 +134,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
 
         // needed for delta, maybe we should change this to the number of Edges... Wrong Input results in Error
-        double lengthOfLongestPath = 0.0;
+
         AllDirectedPaths alldirectedPaths = new AllDirectedPaths(this.network);
         for (int i = 0; i < sources.size(); i++) {
             List<GraphPath> allPaths = alldirectedPaths.getAllPaths(this.sources.get(i), this.sinks.get(i), true, null);
@@ -140,10 +145,10 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
             }
         }
-        this.delta = (1 + accuracy) * Math.pow((1 + accuracy) * lengthOfLongestPath, -1 / accuracy);
-
+        this.delta2 = (1 + this.accuracy) * Math.pow((1 + this.accuracy) * lengthOfLongestPath, -1 / this.accuracy);
+        this.delta = 1e-8;
         // check if delta is zero -> exit programm
-        Assert.assertNotEquals("DELTA IS TOO CLOSE TO ZERO", comparator.compare(0.0, delta), 0);
+       // Assert.assertNotEquals("DELTA IS TOO CLOSE TO ZERO", comparator.compare(0.0, delta2), 0);
         buildInternal();
         maxFlowValue = 0;
         maxFlow = null;
