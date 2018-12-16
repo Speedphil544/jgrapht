@@ -10,7 +10,6 @@ import org.jgrapht.alg.util.extension.Extension;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 import org.jgrapht.alg.util.extension.ExtensionManager;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
-import org.junit.Assert;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -71,7 +70,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     double lengthOfLongestPath = 0.0;
 
 
-    double delta2 = 0.0;
+    int divisionCounter = 0;
 
 
     //newDataStructure[ (Pairs of sources and sinks)
@@ -144,11 +143,12 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                     lengthOfLongestPath = path.getLength();
 
             }
+
         }
-        this.delta2 = (1 + this.accuracy) * Math.pow((1 + this.accuracy) * lengthOfLongestPath, -1 / this.accuracy);
+
         this.delta = 1e-8;
         // check if delta is zero -> exit programm
-       // Assert.assertNotEquals("DELTA IS TOO CLOSE TO ZERO", comparator.compare(0.0, delta2), 0);
+        // Assert.assertNotEquals("DELTA IS TOO CLOSE TO ZERO", comparator.compare(0.0, delta2), 0);
         buildInternal();
         maxFlowValue = 0;
         maxFlow = null;

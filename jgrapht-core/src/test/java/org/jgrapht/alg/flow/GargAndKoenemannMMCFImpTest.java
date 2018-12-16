@@ -198,7 +198,7 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add(v20);
         sinks.add(v3);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
-        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
+        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate*0.01);
         System.out.println(gargAndKoenemann.getFlow());
         assertTrue(comparator.compare(Math.abs(2 - flow), approximationRate * 2) <= 0);
     }

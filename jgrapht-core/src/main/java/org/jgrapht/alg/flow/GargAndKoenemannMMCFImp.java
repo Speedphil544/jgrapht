@@ -161,18 +161,25 @@ public class GargAndKoenemannMMCFImp<V, E>
                         currentDemandFlowIsPushedAlong = demand;
                         // ]new Data Structure
                     }
-
                 }
+
             }
 
-
+            //
+            if (comparator.compare(shortestPathWeight / shortestPath.getLength(), lengthOfLongestPath * delta) > 0) {
+                divisionCounter++;
+                for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+                    networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) / (lengthOfLongestPath));
+                }
+            }
             // if there are no valid paths, break and set flow = zeroMapping
             if (!pathsExist) {
                 break;
             }
 
             // breaking condition, we stop when shortest path hast length bigger or equal to 1
-            double b = Math.pow(lengthOfLongestPath * (1 + this.accuracy), 1 / this.accuracy) / (1 + this.accuracy);
+            double b = Math.pow(lengthOfLongestPath * (1 + this.accuracy), 1 / this.accuracy - divisionCounter) / (1 + this.accuracy);
+            System.out.println(b + " " + divisionCounter + " " + shortestPathWeight);
             if (comparator.compare(shortestPath.getWeight(), delta * b) >= 0) {
                 break;
             }
