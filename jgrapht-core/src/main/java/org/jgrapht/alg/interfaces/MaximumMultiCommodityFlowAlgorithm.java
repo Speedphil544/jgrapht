@@ -19,6 +19,20 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      */
     MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double accuracy);
 
+
+
+    // for mcf
+    Map<E, Double> getFlowMap(V source, V sink);
+
+
+
+
+
+
+
+
+
+
     /**
      * Sets current source to <tt>source</tt>, current sink to <tt>sink</tt>, then calculates
      * maximum flow from <tt>source</tt> to <tt>sink</tt>. Note, that <tt>source</tt> and
@@ -32,6 +46,9 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
     default double getMaximumFlowValue(List<V> sources, List<V> sinks, double accuracy) {
         return getMaximumFlow(sources, sinks,accuracy).getValue();
     }
+
+
+
 
     /**
      * A maximum flow
@@ -47,7 +64,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
          * @return value of the maximum-flow
          */
         Double getValue();
-    }
+            }
 
     /**
      * Default implementation of the maximum flow

@@ -25,11 +25,15 @@ public class GargAndKoenemannMMCFImp<V, E>
     /**
      * Current sources vertexList.
      */
-    private List<VertexExtension> currentSources;
+    //private List<VertexExtension> currentSources;
     /**
      * Current sinks vertexList.
      */
-    private List<VertexExtension> currentSinks;
+   // private List<VertexExtension> currentSinks;
+
+
+
+
     private final ExtensionFactory<VertexExtension> vertexExtensionsFactory;
     private final ExtensionFactory<AnnotatedFlowEdge> edgeExtensionsFactory;
 
@@ -52,8 +56,13 @@ public class GargAndKoenemannMMCFImp<V, E>
         super(network, epsilon);
         this.vertexExtensionsFactory = VertexExtension::new;
         this.edgeExtensionsFactory = AnnotatedFlowEdge::new;
-        currentSources = new ArrayList<>();
-        currentSinks = new ArrayList<>();
+
+
+        //currentSources = new ArrayList<>();
+        //currentSinks = new ArrayList<>();
+
+
+
         currentDemands = new LinkedList<>();
 
         if (epsilon <= 0) {
@@ -82,6 +91,16 @@ public class GargAndKoenemannMMCFImp<V, E>
         maxFlow = composeFlow();
         return new MaximumMultiCommodityFlowImpl<>(maxFlowValue, maxFlow);
     }
+
+
+
+    // @Override
+    //    public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double accuracy) {
+    //        this.calculateMaxFlow(sources, sinks, accuracy);
+    //        maxFlow = composeFlow();
+    //        return new MaximumMultiCommodityFlowImpl<>(maxFlowValue, maxFlow);
+    //    }
+
 
     /**
      * Assigns source to currentSource and sink to currentSink. Afterwards invokes dinic() method to
@@ -120,8 +139,11 @@ public class GargAndKoenemannMMCFImp<V, E>
             }
         }
         for (int i = 0; i < demandSize; i++) {
-            currentSources.add(getVertexExtension(sources.get(i)));
-            currentSinks.add(getVertexExtension(sinks.get(i)));
+
+
+
+            //currentSources.add(getVertexExtension(sources.get(i)));
+            //currentSinks.add(getVertexExtension(sinks.get(i)));
             // try new data structure
             currentDemands.add(new Pair(getVertexExtension(sources.get(i)), getVertexExtension(sinks.get(i))));
 
@@ -179,7 +201,7 @@ public class GargAndKoenemannMMCFImp<V, E>
 
             // breaking condition, we stop when shortest path hast length bigger or equal to 1
             double b = Math.pow(lengthOfLongestPath * (1 + this.accuracy), 1 / this.accuracy - divisionCounter) / (1 + this.accuracy);
-            System.out.println(b + " " + divisionCounter + " " + shortestPathWeight);
+            //System.out.println(b + " " + divisionCounter + " " + shortestPathWeight);
             if (comparator.compare(shortestPath.getWeight(), delta * b) >= 0) {
                 break;
             }
