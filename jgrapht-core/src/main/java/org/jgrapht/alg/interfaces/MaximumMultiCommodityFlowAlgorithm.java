@@ -19,6 +19,12 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      */
     MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double accuracy);
 
+    // for mcf
+    Map<E, Double> getFlowMap(V source, V sink);
+
+
+
+
     /**
      * Sets current source to <tt>source</tt>, current sink to <tt>sink</tt>, then calculates
      * maximum flow from <tt>source</tt> to <tt>sink</tt>. Note, that <tt>source</tt> and
