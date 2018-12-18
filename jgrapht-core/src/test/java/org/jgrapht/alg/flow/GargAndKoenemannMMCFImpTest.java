@@ -30,7 +30,7 @@ public class GargAndKoenemannMMCFImpTest {
 
     private final String v3 = "v3";
 
-    private final double approximationRate = 0.1;
+    private final double approximationRate = 0.01;
 
     private double epsilon = 1e-20;
 
@@ -127,7 +127,6 @@ public class GargAndKoenemannMMCFImpTest {
         String v18 = "v18";
         String v19 = "v19";
         String v20 = "v20";
-
         g.addVertex(v4);
         g.addVertex(v5);
         g.addVertex(v6);
@@ -145,9 +144,6 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v18);
         g.addVertex(v19);
         g.addVertex(v20);
-
-
-
         edge = g.addEdge(v1, v2);
         g.setEdgeWeight(edge, 2.0);
         edge = g.addEdge(v2, v3);
@@ -186,11 +182,6 @@ public class GargAndKoenemannMMCFImpTest {
         g.setEdgeWeight(edge, 1.0);
         edge = g.addEdge(v19, v20);
         g.setEdgeWeight(edge, 1.0);
-
-
-
-
-
         List<String> sources = new LinkedList();
         sources.add(v1);
         sources.add(v1);
@@ -198,8 +189,8 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add(v20);
         sinks.add(v3);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
-        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate*0.01);
-        System.out.println(gargAndKoenemann.getFlow());
+        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
+        System.out.println(gargAndKoenemann.getFlowMap(v1,v3));
         assertTrue(comparator.compare(Math.abs(2 - flow), approximationRate * 2) <= 0);
     }
 

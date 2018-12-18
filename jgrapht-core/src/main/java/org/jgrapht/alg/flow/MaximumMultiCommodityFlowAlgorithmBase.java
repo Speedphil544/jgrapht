@@ -42,22 +42,14 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     public ExtensionManager<V, ? extends VertexExtensionBase> vertexExtensionManager;
     protected ExtensionManager<E, ? extends AnnotatedFlowEdge> edgeExtensionManager;
 
-    /* Source used during the last invocation of this algorithm */
-    // protected List<V> sources = null;
-    /* Sink used during the last invocation of this algorithm */
-    // protected List<V> sinks = null;
     /* Max flow established after last invocation of the algorithm. */
     protected double maxFlowValue = -1;
+    // list of the values foe each demand flow
+    protected List<Double> maxFlowValueForEachDemand = null;
     /* Mapping of the flow on each edge. */
     protected Map<E, Double> maxFlow = null;
-
-
-    // new Data Structure[
     /* List of mappings for each demand, */
     public Map<Pair<V, V>, Map<E, Double>> mapOfFlowsForEachDemand = null;
-    // ]new Data Structure
-
-    //toDo MaxFlowValueOfEachDemand
 
     /* A copy of the network, that uses a length function as weights, needed for dijkstraShortestPath*/
     public Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopy;
@@ -67,14 +59,9 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     protected double accuracy = 0;
     // save a little bit of computation time
     int demandSize = 0;
-
-
     double lengthOfLongestPath = 0.0;
-
     // counts how often we divided by lengthOfLongestPath
     int divisionCounter = 0;
-
-
     //newDataStructure[ (Pairs of sources and sinks)
     List<Pair<VertexExtensionBase, VertexExtensionBase>> demands = null;
     // ]new Data Structure
@@ -112,40 +99,20 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
-
-
-        //this.sources = sources;
-        // this.sinks = sinks;
-
-
-
-
         this.accuracy = 1 - Math.pow(1 + approximationRate, -0.5);
         this.demandSize = sinks.size();
-        // new Data Structure[
         demands = new LinkedList<Pair<VertexExtensionBase, VertexExtensionBase>>();
-        // ]new Data Structure
         for (int i = 0; i < demandSize; i++) {
-
-
-
             VertexExtensionBase source = vertexExtensionManager.getExtension(sources.get(i));
             VertexExtensionBase sink = vertexExtensionManager.getExtension(sinks.get(i));
             source.prototype = sources.get(i);
             sink.prototype = sinks.get(i);
-
-
-            // new datastructur[
             demands.add(new Pair(source, sink));
-
-            // ]new Data Structure
-
 
         }
 
 
         // needed for delta, maybe we should change this to the number of Edges... Wrong Input results in Error
-
         AllDirectedPaths alldirectedPaths = new AllDirectedPaths(this.network);
         for (int i = 0; i < sources.size(); i++) {
             List<GraphPath> allPaths = alldirectedPaths.getAllPaths(sources.get(i), sinks.get(i), true, null);
@@ -305,9 +272,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     protected Map<E, Double> composeFlow() {
         Map<E, Double> maxFlow = new HashMap<>();
 
-
-        // new Data Structure[
-
+        // Flow for each demand
         mapOfFlowsForEachDemand = new HashMap<>();
         for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
             Pair<V, V> vDemand = new Pair<V, V>(demand.getFirst().prototype, demand.getSecond().prototype);
@@ -317,26 +282,22 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 mapOfFlowsForEachDemand.get(vDemand).put(e, 0.0);
             }
         }
-        // ]new Data Structure
+
 
         for (E e : network.edgeSet()) {
+
+            // total flow
             AnnotatedFlowEdge annotatedFlowEdge = edgeExtensionManager.getExtension(e);
             maxFlow.put(
                     e, directedGraph ? annotatedFlowEdge.flow
                             : Math.max(annotatedFlowEdge.flow, annotatedFlowEdge.inverse.flow));
 
-
-            // new Data Structure[
-
-
-
+            // Flow for each demand
             for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
                 Pair<V, V> vDemand = new Pair(demand.getFirst().prototype, demand.getSecond().prototype);
 
                 mapOfFlowsForEachDemand.get(vDemand).put(e, mapOfFlowsForEachDemand.get(vDemand).get(e) + annotatedFlowEdge.demandFlows.get(demand));
             }
-            //  ]new Data Structure
-
         }
 
         return maxFlow;
@@ -423,7 +384,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      */
 
 
-
     //public List<V> getCurrentSource() {
     //    return sources;
     // }
@@ -458,52 +418,22 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     public Map<E, Double> getFlowMap() {
         if (maxFlow == null) // Lazily calculate the max flow map
             maxFlow = composeFlow();
-
-        // toDo: dies ist gerade nur ein Test, das ganze dann ins interface verschieben!
-
-
         return maxFlow;
     }
 
-
-
-
-
-
-
     //get flow for specific demand
-
     public Map<E, Double> getFlowMap(V source, V sink) {
         Map<E, Double> flow = null;
         if (mapOfFlowsForEachDemand == null) {
 
             composeFlow();
         }
-
-
-
-
-
-
-
         for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
-
-
-
-
             if (demand.getFirst().prototype == source && demand.getSecond().prototype == sink) {
-
-
-
                 flow = mapOfFlowsForEachDemand.get(new Pair(demand.getFirst().prototype, demand.getSecond().prototype));
-
             }
-
-
         }
-
         return flow;
-
     }
 
 

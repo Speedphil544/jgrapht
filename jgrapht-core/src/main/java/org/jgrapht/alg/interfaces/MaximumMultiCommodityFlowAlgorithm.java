@@ -25,6 +25,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
 
 
 
+
     /**
      * Sets current source to <tt>source</tt>, current sink to <tt>sink</tt>, then calculates
      * maximum flow from <tt>source</tt> to <tt>sink</tt>. Note, that <tt>source</tt> and
