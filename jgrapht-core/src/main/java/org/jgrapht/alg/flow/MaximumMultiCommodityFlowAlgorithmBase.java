@@ -45,7 +45,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     /* Max flow established after last invocation of the algorithm. */
     protected double maxFlowValue = -1;
     // list of the values foe each demand flow
-    protected List<Double> maxFlowValueForEachDemand = null;
+    protected Map<Pair<V, V>, Double> maxFlowValueForEachDemand = null;
     /* Mapping of the flow on each edge. */
     protected Map<E, Double> maxFlow = null;
     /* List of mappings for each demand, */
@@ -130,6 +130,14 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         maxFlowValue = 0;
         maxFlow = null;
         mapOfFlowsForEachDemand = null;
+
+
+        maxFlowValueForEachDemand = new HashMap<>();
+
+        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
+            maxFlowValueForEachDemand.put(new Pair(demand.getFirst().prototype, demand.getSecond().prototype), 0.0);
+
+        }
     }
 
     /**
@@ -181,9 +189,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     }
 
 
-    //  changed private to , to ensure that we can create dummy edges fo dijkstra
-
-    protected AnnotatedFlowEdge createEdge(
+    private AnnotatedFlowEdge createEdge(
             VertexExtensionBase source, VertexExtensionBase target, E e, double weight) {
         AnnotatedFlowEdge ex = edgeExtensionManager.getExtension(e);
         ex.source = source;
@@ -271,37 +277,39 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      */
     protected Map<E, Double> composeFlow() {
         Map<E, Double> maxFlow = new HashMap<>();
-
-        // Flow for each demand
-        mapOfFlowsForEachDemand = new HashMap<>();
-        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
-            Pair<V, V> vDemand = new Pair<V, V>(demand.getFirst().prototype, demand.getSecond().prototype);
-            mapOfFlowsForEachDemand.put(vDemand, new HashMap<>());
-            for (E e :
-                    network.edgeSet()) {
-                mapOfFlowsForEachDemand.get(vDemand).put(e, 0.0);
-            }
-        }
-
-
         for (E e : network.edgeSet()) {
-
             // total flow
             AnnotatedFlowEdge annotatedFlowEdge = edgeExtensionManager.getExtension(e);
             maxFlow.put(
                     e, directedGraph ? annotatedFlowEdge.flow
                             : Math.max(annotatedFlowEdge.flow, annotatedFlowEdge.inverse.flow));
+        }
+        return maxFlow;
+    }
 
-            // Flow for each demand
+    protected Map<E, Double> composeFlow(V source, V sink) {
+        Map<E, Double> maxFlow = new HashMap<>();
+        if (mapOfFlowsForEachDemand == null) {
+            mapOfFlowsForEachDemand = new HashMap<>();
             for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
-                Pair<V, V> vDemand = new Pair(demand.getFirst().prototype, demand.getSecond().prototype);
-
-                mapOfFlowsForEachDemand.get(vDemand).put(e, mapOfFlowsForEachDemand.get(vDemand).get(e) + annotatedFlowEdge.demandFlows.get(demand));
+                Pair<V, V> vDemand = new Pair<V, V>(demand.getFirst().prototype, demand.getSecond().prototype);
+                mapOfFlowsForEachDemand.put(vDemand, new HashMap<>());
+                for (E e :
+                        network.edgeSet()) {
+                    mapOfFlowsForEachDemand.get(vDemand).put(e, 0.0);
+                }
             }
+        }
+        for (E e : network.edgeSet()) {
+            AnnotatedFlowEdge annotatedFlowEdge = edgeExtensionManager.getExtension(e);
+            // Flow of demand
+            Pair<V, V> vDemand = new Pair(source, sink);
+            mapOfFlowsForEachDemand.get(vDemand).put(e, mapOfFlowsForEachDemand.get(vDemand).get(e) + annotatedFlowEdge.demandFlows.get(new Pair(vertexExtensionManager.getExtension(source), vertexExtensionManager.getExtension(sink))));
         }
 
         return maxFlow;
     }
+
 
     class VertexExtensionBase
             implements
@@ -422,17 +430,12 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     }
 
     //get flow for specific demand
-    public Map<E, Double> getFlowMap(V source, V sink) {
+    public Map<E, Double> getFlowMapOfDemand(V source, V sink) {
         Map<E, Double> flow = null;
         if (mapOfFlowsForEachDemand == null) {
-
-            composeFlow();
+            composeFlow(source, sink);
         }
-        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
-            if (demand.getFirst().prototype == source && demand.getSecond().prototype == sink) {
-                flow = mapOfFlowsForEachDemand.get(new Pair(demand.getFirst().prototype, demand.getSecond().prototype));
-            }
-        }
+        flow = mapOfFlowsForEachDemand.get(new Pair(source, sink));
         return flow;
     }
 

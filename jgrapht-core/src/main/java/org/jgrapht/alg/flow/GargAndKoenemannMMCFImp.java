@@ -53,12 +53,6 @@ public class GargAndKoenemannMMCFImp<V, E>
         super(network, epsilon);
         this.vertexExtensionsFactory = VertexExtension::new;
         this.edgeExtensionsFactory = AnnotatedFlowEdge::new;
-
-
-        //currentSources = new ArrayList<>();
-        //currentSinks = new ArrayList<>();
-
-
         currentDemands = new LinkedList<>();
 
         if (epsilon <= 0) {
@@ -85,9 +79,11 @@ public class GargAndKoenemannMMCFImp<V, E>
     public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double accuracy) {
         this.calculateMaxFlow(sources, sinks, accuracy);
         maxFlow = composeFlow();
-        return new MaximumMultiCommodityFlowImpl<>(maxFlowValue, maxFlow);
+        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
+            composeFlow(demand.getFirst().prototype, demand.getSecond().prototype);
+        }
+        return new MaximumMultiCommodityFlowImpl<>(maxFlowValue, maxFlow, maxFlowValueForEachDemand, mapOfFlowsForEachDemand);
     }
-
 
 
     /**
@@ -164,7 +160,7 @@ public class GargAndKoenemannMMCFImp<V, E>
             if (comparator.compare(shortestPathWeight / shortestPath.getLength(), lengthOfLongestPath * delta) > 0) {
                 divisionCounter++;
                 for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
-                    networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) / (lengthOfLongestPath));
+                    networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) / (lengthOfLongestPath * (1 + this.accuracy)));
                 }
             }
             // if there are no valid paths, break and set flow = zeroMapping
@@ -185,7 +181,7 @@ public class GargAndKoenemannMMCFImp<V, E>
                     smallestCapacity = e.capacity;
                 }
             }
-            //update length and flow(value)
+            //update length and flow(value) (also for each deamand)
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
                 networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + networkCopy.getEdgeWeight(e) * accuracy * (smallestCapacity / e.capacity));
                 e.flow = e.flow + smallestCapacity;
@@ -195,11 +191,15 @@ public class GargAndKoenemannMMCFImp<V, E>
 
             }
             maxFlowValue += smallestCapacity;
+            Pair<V, V> pair = new Pair(currentDemandFlowIsPushedAlong.getFirst().prototype, currentDemandFlowIsPushedAlong.getSecond().prototype);
+            maxFlowValueForEachDemand.put(pair, maxFlowValueForEachDemand.get(pair) + smallestCapacity);
         }
 
 
         //scale the flow
         scaleFlow();
+
+
 
 
     }
@@ -220,7 +220,12 @@ public class GargAndKoenemannMMCFImp<V, E>
                 e.demandFlows.put(demand, e.demandFlows.get(demand) / mostViolatedEdgeViolation);
             }
         }
-        maxFlowValue /= mostViolatedEdgeViolation;
+         maxFlowValue *= this.accuracy*Math.log(1+this.accuracy)/(this.accuracy*Math.log((1+this.accuracy)*lengthOfLongestPath));
+       // maxFlowValue /= mostViolatedEdgeViolation;
+
+        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
+            maxFlowValueForEachDemand.put(castPrototypePair(demand), maxFlowValueForEachDemand.get(castPrototypePair(demand)) / mostViolatedEdgeViolation);
+        }
     }
 
 
@@ -236,4 +241,13 @@ public class GargAndKoenemannMMCFImp<V, E>
             VertexExtensionBase {
 
     }
+
+    // cast a extension pair to a V pair
+    private Pair<V, V> castPrototypePair(Pair<VertexExtensionBase, VertexExtensionBase> pair) {
+        return new Pair(pair.getFirst().prototype, pair.getSecond().prototype);
+
+
+    }
+
+
 }

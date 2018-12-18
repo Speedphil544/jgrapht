@@ -1,5 +1,7 @@
 package org.jgrapht.alg.interfaces;
 
+import org.jgrapht.alg.util.Pair;
+
 import java.util.List;
 import java.util.Map;
 
@@ -20,10 +22,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
     MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double accuracy);
 
     // for mcf
-    Map<E, Double> getFlowMap(V source, V sink);
-
-
-
+    Map<E, Double> getFlowMapOfDemand(V source, V sink);
 
 
     /**
@@ -37,7 +36,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      * @return the value of the maximum flow
      */
     default double getMaximumFlowValue(List<V> sources, List<V> sinks, double accuracy) {
-        return getMaximumFlow(sources, sinks,accuracy).getValue();
+        return getMaximumFlow(sources, sinks, accuracy).getValue();
     }
 
     /**
@@ -61,12 +60,16 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      *
      * @param <E> the graph edge type
      */
-    class MaximumMultiCommodityFlowImpl<E>
+    class MaximumMultiCommodityFlowImpl<V, E>
             extends
             FlowImpl<E>
             implements
             MaximumFlow<E> {
         private Double value;
+
+
+        private Map<Pair<V, V>, Map<E, Double>> mapOfFlowForEachDemand;
+        Map<Pair<V, V>, Double> values;
 
         /**
          * Create a new maximum flow
@@ -74,9 +77,12 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
          * @param value the flow value
          * @param flow  the flow map
          */
-        public MaximumMultiCommodityFlowImpl(Double value, Map<E, Double> flow) {
+        public MaximumMultiCommodityFlowImpl(Double value, Map<E, Double> flow, Map<Pair<V, V>, Double> values, Map<Pair<V, V>, Map<E, Double>> mapOfFlowForEachDemand) {
             super(flow);
             this.value = value;
+            this.mapOfFlowForEachDemand = mapOfFlowForEachDemand;
+            this.values = values;
+
         }
 
         @Override
@@ -86,7 +92,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
 
         @Override
         public String toString() {
-            return "Flow Value: " + value + "\nFlow map:\n" + getFlowMap();
+            return "Flow Value: " + value + "\nFlow map:\n" + getFlowMap() +"\n Commodity Flow Maps:" + mapOfFlowForEachDemand + "\n Commodity Flow Values" + values ;
         }
     }
 }
