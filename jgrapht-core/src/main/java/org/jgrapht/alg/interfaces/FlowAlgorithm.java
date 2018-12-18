@@ -47,6 +47,11 @@ public interface FlowAlgorithm<V, E>
      */
     Map<E, Double> getFlowMap();
 
+
+
+
+
+
     /**
      * For the specified {@code edge} $(u, v)$ returns vertex $v$ if the flow goes from $u$ to $v$,
      * or returns vertex $u$ otherwise. For directed flow networks the result is always the head of
