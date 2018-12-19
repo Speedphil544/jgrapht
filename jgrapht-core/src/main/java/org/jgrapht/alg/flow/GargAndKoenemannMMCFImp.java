@@ -7,6 +7,7 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -96,8 +97,6 @@ public class GargAndKoenemannMMCFImp<V, E>
      */
     private double calculateMaxFlow(List<V> sources, List<V> sinks, double accuracy) {
 
-        super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
-
         if (sources == (null)) {
             throw new IllegalArgumentException("Network does not contain sources!");
         }
@@ -122,6 +121,10 @@ public class GargAndKoenemannMMCFImp<V, E>
                 throw new IllegalArgumentException("A source is equal to its sink!");
             }
         }
+
+        super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
+
+
         for (int i = 0; i < demandSize; i++) {
             currentDemands.add(new Pair(getVertexExtension(sources.get(i)), getVertexExtension(sinks.get(i))));
         }
@@ -136,6 +139,8 @@ public class GargAndKoenemannMMCFImp<V, E>
      * /**
      */
     public void gargAndKoenemann() {
+        int counter = 0;
+        System.out.println(divisionCounter);
 
         while (true) {
 
@@ -156,21 +161,19 @@ public class GargAndKoenemannMMCFImp<V, E>
                     }
                 }
             }
-            // check if we need to update the length of the edges
-            if (comparator.compare(shortestPathWeight / shortestPath.getLength(), lengthOfLongestPath * delta) > 0) {
-                divisionCounter++;
-                for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
-                    networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) / (lengthOfLongestPath * (1 + this.accuracy)));
-                }
-            }
+
+
             // if there are no valid paths, break and set flow = zeroMapping
             if (!pathsExist) {
+                System.out.println("no paths");
                 break;
             }
             // breaking condition, we stop when shortest path hast length bigger or equal to 1
             double b = Math.pow(lengthOfLongestPath * (1 + this.accuracy), 1 / this.accuracy - divisionCounter) / (1 + this.accuracy);
             //System.out.println(b + " " + divisionCounter + " " + shortestPathWeight);
+
             if (comparator.compare(shortestPath.getWeight(), delta * b) >= 0) {
+
                 break;
             }
             //get smallest capacity
@@ -193,13 +196,30 @@ public class GargAndKoenemannMMCFImp<V, E>
             maxFlowValue += smallestCapacity;
             Pair<V, V> pair = new Pair(currentDemandFlowIsPushedAlong.getFirst().prototype, currentDemandFlowIsPushedAlong.getSecond().prototype);
             maxFlowValueForEachDemand.put(pair, maxFlowValueForEachDemand.get(pair) + smallestCapacity);
+
+            // check if we need to update the length of the edges
+            double biggestEdgeValue = shortestPath.getEdgeList().stream().map(networkCopy::getEdgeWeight).sorted(Comparator.reverseOrder()).findFirst().orElse(null);
+
+
+            for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
+
+                if (e.missedNUmberofDivisions > 0 && comparator.compare(networkCopy.getEdgeWeight(e), Math.pow(lengthOfLongestPath * (1 + accuracy), 2) * delta) >= 0) {
+                    networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) / Math.pow(lengthOfLongestPath * (1 + accuracy), 1));
+                    e.missedNUmberofDivisions--;
+
+
+                }
+
+            }
+            counter++;
+            if (counter % 100000 == 0) {
+                System.out.println(shortestPathWeight);
+            }
         }
 
 
         //scale the flow
         scaleFlow();
-
-
 
 
     }
@@ -220,8 +240,8 @@ public class GargAndKoenemannMMCFImp<V, E>
                 e.demandFlows.put(demand, e.demandFlows.get(demand) / mostViolatedEdgeViolation);
             }
         }
-         maxFlowValue *= this.accuracy*Math.log(1+this.accuracy)/(this.accuracy*Math.log((1+this.accuracy)*lengthOfLongestPath));
-       // maxFlowValue /= mostViolatedEdgeViolation;
+        maxFlowValue *= (this.accuracy * Math.log(1 + this.accuracy)) / (this.accuracy * Math.log((1 + this.accuracy) * lengthOfLongestPath));
+        // maxFlowValue /= mostViolatedEdgeViolation;
 
         for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
             maxFlowValueForEachDemand.put(castPrototypePair(demand), maxFlowValueForEachDemand.get(castPrototypePair(demand)) / mostViolatedEdgeViolation);

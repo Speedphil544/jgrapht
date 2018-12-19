@@ -3,7 +3,6 @@ package org.jgrapht.alg.flow;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.MaximumMultiCommodityFlowAlgorithm;
-import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.alg.util.extension.Extension;
@@ -50,6 +49,10 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     protected Map<E, Double> maxFlow = null;
     /* List of mappings for each demand, */
     public Map<Pair<V, V>, Map<E, Double>> mapOfFlowsForEachDemand = null;
+
+
+    GraphPath<VertexExtensionBase, AnnotatedFlowEdge> pathWithMostEdges = null;
+
 
     /* A copy of the network, that uses a length function as weights, needed for dijkstraShortestPath*/
     public Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopy;
@@ -102,6 +105,8 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         this.accuracy = 1 - Math.pow(1 + approximationRate, -0.5);
         this.demandSize = sinks.size();
         demands = new LinkedList<Pair<VertexExtensionBase, VertexExtensionBase>>();
+
+
         for (int i = 0; i < demandSize; i++) {
             VertexExtensionBase source = vertexExtensionManager.getExtension(sources.get(i));
             VertexExtensionBase sink = vertexExtensionManager.getExtension(sinks.get(i));
@@ -111,22 +116,44 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
         }
 
-
+        lengthOfLongestPath = network.vertexSet().size();
         // needed for delta, maybe we should change this to the number of Edges... Wrong Input results in Error
-        AllDirectedPaths alldirectedPaths = new AllDirectedPaths(this.network);
-        for (int i = 0; i < sources.size(); i++) {
-            List<GraphPath> allPaths = alldirectedPaths.getAllPaths(sources.get(i), sinks.get(i), true, null);
+/*
+        AllDirectedPaths<V, E> alldirectedPaths = new AllDirectedPaths(this.network);
 
-            for (GraphPath path : allPaths) {
-                if (path.getLength() > lengthOfLongestPath)
+
+        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
+            for (GraphPath path : alldirectedPaths.getAllPaths(demand.getFirst().prototype, demand.getSecond().prototype, true, null)) {
+                if (path.getLength() > lengthOfLongestPath) {
                     lengthOfLongestPath = path.getLength();
+                }
+            }
 
+        }
+  */
+        // lengthOfLongestPath = network.edgeSet().size();
+        this.delta = 1e-8;
+
+
+        while (Math.pow(lengthOfLongestPath * (1 + this.accuracy), 1 / this.accuracy - divisionCounter) / (1 + this.accuracy) > 1/delta) {
+            divisionCounter++;
+        }
+
+
+        buildInternal();
+/*        System.out.println(lengthOfLongestPath);
+        AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> alldirectedPaths2 = new AllDirectedPaths(this.networkCopy);
+        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
+            for (GraphPath path : alldirectedPaths2.getAllPaths(demand.getFirst(), demand.getSecond(), true, null)) {
+                if (path.getLength() == lengthOfLongestPath) {
+                    pathWithMostEdges = path;
+                }
             }
 
         }
 
-        this.delta = 1e-8;
-        buildInternal();
+        System.out.println("lalala");
+  */
         maxFlowValue = 0;
         maxFlow = null;
         mapOfFlowsForEachDemand = null;
@@ -196,6 +223,9 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         ex.target = target;
         ex.capacity = weight;
         ex.prototype = e;
+
+
+        ex.missedNUmberofDivisions = divisionCounter;
 
         // FlowMap
         ex.demandFlows = new HashMap();
@@ -341,6 +371,10 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         private VertexExtensionBase target;
         /* Inverse edge */
         private AnnotatedFlowEdge inverse;
+
+
+        int missedNUmberofDivisions;
+
 
         E prototype; // Edge
         double capacity; // Maximum by which the flow in the direction can be increased (on top of
