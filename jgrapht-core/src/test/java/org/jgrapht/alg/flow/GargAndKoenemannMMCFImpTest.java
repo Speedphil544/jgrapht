@@ -1,14 +1,20 @@
 package org.jgrapht.alg.flow;
 
+import com.google.common.base.Stopwatch;
+import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.MaximumMultiCommodityFlowAlgorithm;
+import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
+import org.jgrapht.alg.util.Pair;
 import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
+import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -28,7 +34,7 @@ public class GargAndKoenemannMMCFImpTest {
 
     private final String v3 = "v3";
 
-    private final double approximationRate = 0.5;
+    private final double approximationRate = 0.1;
 
     private double epsilon = 1e-8;
 
@@ -72,10 +78,8 @@ public class GargAndKoenemannMMCFImpTest {
 
     @Test
     public void simpleTest0() {
-
-        DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> g = createRandomGraph(100, 0.3, 1, 7);
-/*
-        g.addVertex(v1);
+        DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> g = createRandomGraph(1000, 0.01, 1, 7);
+/*        g.addVertex(v1);
         g.addVertex(v2);
         g.addVertex(v3);
         edge = g.addEdge(v1, v2);
@@ -88,16 +92,36 @@ public class GargAndKoenemannMMCFImpTest {
 
         List<String> sources = new LinkedList();
         sources.add("v1");
-        sources.add("v1");
-        sources.add("v4");
+        sources.add("v5");
         List<String> sinks = new LinkedList();
         sinks.add("v3");
-        sinks.add("v5");
         sinks.add("v8");
 
-        DijkstraShortestPath<String, DefaultWeightedEdge> dijkstra = new DijkstraShortestPath<>(g);
-        //dijkstra.getPaths("v1").getPath();
+        //DijkstraShortestPath<String, DefaultWeightedEdge> dijkstraShortestPath = new DijkstraShortestPath(g);
 
+
+       // Map<DefaultWeightedEdge, Double> length = g.edgeSet().stream().collect(Collectors.toMap(x -> x, x -> 0.0001));
+
+
+
+
+      //  List<GraphPath<String, DefaultWeightedEdge>> allpaths = new LinkedList<>();
+        //AllDirectedPaths<String, DefaultWeightedEdge> allDirectedPaths = new AllDirectedPaths(g);
+
+       // allpaths = allDirectedPaths.getAllPaths("v1", "v10", true, null);
+
+
+
+       // Pair<GraphPath<String, DefaultWeightedEdge>, Double> shortestPathPair = allpaths
+       //         .stream().map(x -> new Pair<GraphPath<String, DefaultWeightedEdge>, Double>(x, x.getEdgeList().stream().mapToDouble(length::get).sum()))
+      //          .min((x, y) -> x.getSecond().compareTo(y.getSecond())).orElse(null);
+
+
+        Stopwatch timer = Stopwatch.createStarted();
+       // dijkstraShortestPath.getPath("v1", "v2000");
+        System.out.println("DIJKSTRA: " + timer.stop());
+
+        //dijkstra.getPaths("v1").getPath();
         gargAndKoenemann = new GargAndKoenemannMMCFImp(g);
         MaximumMultiCommodityFlowAlgorithm.MaximumFlow flow = gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate);
         System.out.println(flow);

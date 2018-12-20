@@ -10,6 +10,7 @@ import org.jgrapht.alg.util.extension.ExtensionFactory;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import com.google.common.base.Stopwatch;
 
 /*
  * @param <V> the graph vertex type.
@@ -145,6 +146,12 @@ public class GargAndKoenemannMMCFImp<V, E>
         while (true) {
 
             //choose shortest path, its value, its demand
+
+
+
+
+
+
             boolean pathsExist = false;
             double shortestPathWeight = Double.POSITIVE_INFINITY;
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
@@ -161,8 +168,6 @@ public class GargAndKoenemannMMCFImp<V, E>
                     }
                 }
             }
-
-
             // if there are no valid paths, break and set flow = zeroMapping
             if (!pathsExist) {
                 System.out.println("no paths");
@@ -211,10 +216,15 @@ public class GargAndKoenemannMMCFImp<V, E>
                 }
 
             }
+
+
             counter++;
-            if (counter % 100000 == 0) {
-                System.out.println(shortestPathWeight);
+            if (counter % 100 == 0) {
+               // System.out.println(shortestPathWeight);
             }
+
+
+
         }
 
 
