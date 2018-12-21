@@ -29,7 +29,7 @@ public class GargAndKoenemannMMCFImpTest {
 
     private final double approximationRate = 0.1;
 
-    private double epsilon = 1e-20;
+    private double epsilon = 1e-30;
 
     private final Comparator<Double> comparator = new ToleranceDoubleComparator(epsilon);
 
@@ -70,13 +70,10 @@ public class GargAndKoenemannMMCFImpTest {
     @Test
     // hier verwenden wir einen Zufallsgrapheng mit vorgegebener Knotenzahl/Kantengewichten/Kantenwahrscheinlkichkeit
 
-    public void simpleTest0() {
+    public void Test0() {
 
 
         DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> g = createRandomGraph(3, 1, 1, 2);
-
-
-
         /*
         g.addVertex(v1);
         g.addVertex(v2);
@@ -87,13 +84,10 @@ public class GargAndKoenemannMMCFImpTest {
         edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, 1000000);
         */
-
-
         List<String> sources = new LinkedList();
         sources.add("v1");
         List<String> sinks = new LinkedList();
         sinks.add("v3");
-
         //DijkstraShortestPath<String, DefaultWeightedEdge> dijkstraShortestPath = new DijkstraShortestPath(g);
         // Map<DefaultWeightedEdge, Double> length = g.edgeSet().stream().collect(Collectors.toMap(x -> x, x -> 0.0001));
         //List<GraphPath<String, DefaultWeightedEdge>> allpaths = new LinkedList<>();
@@ -106,7 +100,6 @@ public class GargAndKoenemannMMCFImpTest {
         // dijkstraShortestPath.getPath("v1", "v2000");
         //System.out.println("DIJKSTRA: " + timer.stop());
         //dijkstra.getPaths("v1").getPath();
-
         gargAndKoenemann = new GargAndKoenemannMMCFImp(g);
         MaximumMultiCommodityFlowAlgorithm.MaximumFlow flow = gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate);
         System.out.println(flow);
@@ -115,7 +108,12 @@ public class GargAndKoenemannMMCFImpTest {
 
 
     @Test
-    // hier testen wir den GargAndKoenemann auf einem Graphen, der 2 Kanten mit sehr unterschiedlichem Gewicht entaehlt
+    /*
+    hier testen wir den GargAndKoenemann auf einem Graphen, der 2 Kanten mit sehr unterschiedlichem Gewicht entaehlt
+        es faellt auf, dass die laengen der Kanten exponentiel unterschiedlich wachsen. Fuer Probleme, die wenige iterationen benoetigen,
+         ist das kein Problem, jedoch sehr wohl bei groser iterationsanzahl: eine kante geht mit ihrer laenge gegen unendlich, waehrend die andere in
+         der naehe der null verharrt.
+   */
     public void Test1() {
         g.addVertex(v1);
         g.addVertex(v2);
@@ -124,7 +122,7 @@ public class GargAndKoenemannMMCFImpTest {
         g.setEdgeWeight(edge, 100000000000000000.0);
         edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, 1.0);
-        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g,epsilon);
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         List<String> sources = new LinkedList();
         sources.add(v1);
         List<String> sinks = new LinkedList();
@@ -219,7 +217,7 @@ public class GargAndKoenemannMMCFImpTest {
         List<String> sinks = new LinkedList();
         sinks.add(v20);
         sinks.add(v3);
-        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
 
         System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
         //assertTrue(comparator.compare(Math.abs(2 - flow), approximationRate * 2) <= 0);
@@ -252,7 +250,6 @@ public class GargAndKoenemannMMCFImpTest {
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
         assertEquals(0.0, flow, 0);
     }
-
 
 
     @Test
