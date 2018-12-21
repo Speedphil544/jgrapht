@@ -50,7 +50,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     /* List of mappings for each demand, */
     public Map<Pair<V, V>, Map<E, Double>> mapOfFlowsForEachDemand = null;
 
-
+    int divisionCounter = 0;
     GraphPath<VertexExtensionBase, AnnotatedFlowEdge> pathWithMostEdges = null;
 
 
@@ -63,8 +63,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     // save a little bit of computation time
     int demandSize = 0;
     double lengthOfLongestPath = 0.0;
-    // counts how often we divided by lengthOfLongestPath
-    int divisionCounter = 0;
     //newDataStructure[ (Pairs of sources and sinks)
     List<Pair<VertexExtensionBase, VertexExtensionBase>> demands = null;
     // ]new Data Structure
@@ -84,6 +82,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
         Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
         this.networkCopy = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
+        lengthOfLongestPath = network.vertexSet().size();
     }
 
     /**
@@ -102,7 +101,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
-        this.accuracy = 1 - Math.pow(1 + approximationRate, -0.5);
         this.demandSize = sinks.size();
         demands = new LinkedList<Pair<VertexExtensionBase, VertexExtensionBase>>();
 
@@ -116,7 +114,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
         }
 
-        lengthOfLongestPath = network.vertexSet().size();
         // needed for delta, maybe we should change this to the number of Edges... Wrong Input results in Error
 /*
         AllDirectedPaths<V, E> alldirectedPaths = new AllDirectedPaths(this.network);
@@ -132,12 +129,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         }
   */
         // lengthOfLongestPath = network.edgeSet().size();
-        this.delta = 1e-8;
-
-
-        while (Math.pow(lengthOfLongestPath * (1 + this.accuracy), 1 / this.accuracy - divisionCounter) / (1 + this.accuracy) > 1/delta) {
-            divisionCounter++;
-        }
 
 
         buildInternal();
@@ -223,9 +214,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         ex.target = target;
         ex.capacity = weight;
         ex.prototype = e;
-
-
-        ex.missedNUmberofDivisions = divisionCounter;
 
         // FlowMap
         ex.demandFlows = new HashMap();
@@ -371,9 +359,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         private VertexExtensionBase target;
         /* Inverse edge */
         private AnnotatedFlowEdge inverse;
-
-
-        int missedNUmberofDivisions;
 
 
         E prototype; // Edge
