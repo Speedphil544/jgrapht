@@ -197,6 +197,7 @@ public class GargAndKoenemannMMCFImp<V, E>
 
 
             counter++;
+            System.out.println("");
 
 
         }
