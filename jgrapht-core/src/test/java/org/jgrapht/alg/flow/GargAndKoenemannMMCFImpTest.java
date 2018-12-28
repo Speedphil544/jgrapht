@@ -111,11 +111,11 @@ public class GargAndKoenemannMMCFImpTest {
     @Test
     /*
    Wie im vorigen Test hat der Graph 3 Knoten(1,2,3) und 2 Kanten([1,2],[2,3])
-   aber die Kapazitaeten sind diesmal gleich und wir haben zwei demands: (1,2) , (1,3).
+   aber die Kapazitaeten sind diesmal gleich mit 1.0 und wir haben zwei demands: (1,2) , (1,3).
    Da der pfad fuer den zweiten demand immer laenger ist als der pfad fuer den ersten demand, wird zuerst
    die laenge der kante [1,2] auf einen wert groeser als  1.0 gebracht, bevor die kante [2,3]
    ueberhaupt angeschaut wird...
-   bei kleinem delta haben folglich ein krasses unglkeichgewicht bei der laenge der beiden
+   bei kleinem delta haben folglich ein krasses ungleichgewicht bei der laenge der beiden
    kanten: naemlich um den faktor delta.
        */
     public void zweiDemandsAufEinemPfadTest() {
