@@ -105,9 +105,9 @@ public class GargAndKoenemannMMCFImpTest {
         List<String> sources = new LinkedList();
         sources.add(v1);
         List<String> sinks = new LinkedList();
-        sinks.add(v2);
+        sinks.add(v3);
         double flow = 1.0;
-        //System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
+        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
         assertTrue(comparator.compare(Math.abs(1.0 - flow), approximationRate * 1.0) <= 0);
     }
 

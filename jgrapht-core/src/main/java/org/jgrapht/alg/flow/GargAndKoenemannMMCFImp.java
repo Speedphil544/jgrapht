@@ -41,6 +41,9 @@ public class GargAndKoenemannMMCFImp<V, E>
     private Pair<VertexExtension, VertexExtension> currentDemandFlowIsPushedAlong;
 
 
+    private double approximationRate = 0.0;
+
+
     /**
      * Constructor. Constructs a new network on which we will calculate the maximum flow, using
      * GargAndKoenemann algorithm.
@@ -120,21 +123,17 @@ public class GargAndKoenemannMMCFImp<V, E>
                 throw new IllegalArgumentException("A source is equal to its sink!");
             }
         }
+        this.approximationRate = approximationRate;
+
 
         this.accuracy = 1 - Math.pow(1 + approximationRate, -0.5);
         this.delta = (1 + accuracy) * Math.pow(lengthOfLongestPath * (1 + accuracy), -1 / accuracy);
         assert (comparator.compare(delta, 0.0) != 0) : "Delta too small: " + delta;
-
-
         super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
-
         for (int i = 0; i < demandSize; i++) {
             currentDemands.add(new Pair(getVertexExtension(sources.get(i)), getVertexExtension(sinks.get(i))));
         }
-
-
         gargAndKoenemann();
-
         return maxFlowValue;
     }
 
@@ -142,8 +141,11 @@ public class GargAndKoenemannMMCFImp<V, E>
      * /**
      */
     public void gargAndKoenemann() {
-        int counter = 0;
 
+        int counter = 0;
+        double maxPrimalObjectiveFuntion = 0.0;
+        double minDualObjectiveFunction = Double.POSITIVE_INFINITY;
+        double neededForFlowScaling = 1.0;
 
         while (true) {
 
@@ -174,6 +176,7 @@ public class GargAndKoenemannMMCFImp<V, E>
                 break;
             }
 
+
             //get smallest capacity
             Double smallestCapacity = Double.POSITIVE_INFINITY;
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
@@ -196,34 +199,54 @@ public class GargAndKoenemannMMCFImp<V, E>
             maxFlowValueForEachDemand.put(pair, maxFlowValueForEachDemand.get(pair) + smallestCapacity);
 
 
-            counter++;
-            System.out.println("");
+            // finish earlier with acceptable result
+            Double mostViolatedEdgeViolation = 0.0;
+            for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+                if (comparator.compare(e.flow / e.capacity, mostViolatedEdgeViolation) > 0) {
+                    mostViolatedEdgeViolation = e.flow / e.capacity;
+                }
+            }
+            double intermediatePrimalObjectiveFuntion = maxFlowValue / mostViolatedEdgeViolation;
+            if (comparator.compare(intermediatePrimalObjectiveFuntion, maxPrimalObjectiveFuntion) > 0) {
+                maxPrimalObjectiveFuntion = intermediatePrimalObjectiveFuntion;
+            }
+            double intermediateDualObjectiveFunction = Math.pow(shortestPathWeight, -1) * networkCopy.edgeSet().stream().mapToDouble(e -> networkCopy.getEdgeWeight(e) * e.capacity).sum();
 
+            if (comparator.compare(intermediateDualObjectiveFunction, minDualObjectiveFunction) <= 0) {
+                minDualObjectiveFunction = intermediateDualObjectiveFunction;
+            }
+
+
+            if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFuntion, 1 + approximationRate) <= 0) {
+                neededForFlowScaling = shortestPathWeight;
+                break;
+            }
+            counter++;
 
         }
 
 
         //scale the flow
-        scaleFlow();
+        scaleFlow(neededForFlowScaling);
 
 
     }
 
 
     // method to scale the flow
-    private void scaleFlow() {
+    private void scaleFlow(double neededForFlowScaling) {
 
 
-        maxFlowValue /= Math.log((1 + accuracy) / delta) / Math.log(1 + accuracy);
+        maxFlowValue /= Math.log((1 + accuracy) * neededForFlowScaling / delta) / Math.log(1 + accuracy);
 
         for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
-            e.flow /= Math.log((1 + accuracy) / delta) / Math.log(1 + accuracy);
+            e.flow /= Math.log((1 + accuracy) * neededForFlowScaling / delta) / Math.log(1 + accuracy);
             for (Pair demand : currentDemands) {
-                e.demandFlows.put(demand, e.demandFlows.get(demand) / (Math.log((1 + accuracy) / delta) / Math.log(1 + accuracy)));
+                e.demandFlows.put(demand, e.demandFlows.get(demand) / (Math.log((1 + accuracy) * neededForFlowScaling / delta) / Math.log(1 + accuracy)));
             }
         }
         for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
-            maxFlowValueForEachDemand.put(castPrototypePair(demand), maxFlowValueForEachDemand.get(castPrototypePair(demand)) / (Math.log((1 + accuracy) / delta) / Math.log(1 + accuracy)));
+            maxFlowValueForEachDemand.put(castPrototypePair(demand), maxFlowValueForEachDemand.get(castPrototypePair(demand)) / (Math.log((1 + accuracy) * neededForFlowScaling / delta) / Math.log(1 + accuracy)));
         }
 
     }
