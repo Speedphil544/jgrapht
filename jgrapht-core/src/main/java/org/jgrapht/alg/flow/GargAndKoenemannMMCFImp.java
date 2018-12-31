@@ -9,6 +9,7 @@ import org.jgrapht.alg.util.extension.ExtensionFactory;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /*
  * @param <V> the graph vertex type.
@@ -171,8 +172,10 @@ public class GargAndKoenemannMMCFImp<V, E>
                 System.out.println("no paths");
                 break;
             }
+
+
             // breaking condition, we stop when shortest path hast length bigger or equal to 1
-            if (comparator.compare(shortestPath.getWeight(), 1.0) >= 0) {
+            if (comparator.compare(shortestPathWeight, 1.0) >= 0) {
                 break;
             }
 
@@ -180,7 +183,7 @@ public class GargAndKoenemannMMCFImp<V, E>
             //get smallest capacity
             Double smallestCapacity = Double.POSITIVE_INFINITY;
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
-                double newCapacity = networkCopy.getEdgeWeight(e);
+                double newCapacity = e.capacity;
                 if (comparator.compare(newCapacity, smallestCapacity) < 0) {
                     smallestCapacity = e.capacity;
                 }
@@ -211,16 +214,14 @@ public class GargAndKoenemannMMCFImp<V, E>
                 maxPrimalObjectiveFuntion = intermediatePrimalObjectiveFuntion;
             }
             double intermediateDualObjectiveFunction = Math.pow(shortestPathWeight, -1) * networkCopy.edgeSet().stream().mapToDouble(e -> networkCopy.getEdgeWeight(e) * e.capacity).sum();
-
             if (comparator.compare(intermediateDualObjectiveFunction, minDualObjectiveFunction) <= 0) {
                 minDualObjectiveFunction = intermediateDualObjectiveFunction;
             }
-
-
-            if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFuntion, 1 + approximationRate) <= 0) {
+            if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFuntion, 1 + approximationRate) <= 0 ) {
                 neededForFlowScaling = shortestPathWeight;
                 break;
             }
+
             counter++;
 
         }
@@ -236,9 +237,7 @@ public class GargAndKoenemannMMCFImp<V, E>
     // method to scale the flow
     private void scaleFlow(double neededForFlowScaling) {
 
-
         maxFlowValue /= Math.log((1 + accuracy) * neededForFlowScaling / delta) / Math.log(1 + accuracy);
-
         for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
             e.flow /= Math.log((1 + accuracy) * neededForFlowScaling / delta) / Math.log(1 + accuracy);
             for (Pair demand : currentDemands) {

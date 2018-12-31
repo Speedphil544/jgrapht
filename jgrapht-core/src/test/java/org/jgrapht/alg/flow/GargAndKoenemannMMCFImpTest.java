@@ -29,7 +29,7 @@ public class GargAndKoenemannMMCFImpTest {
 
     private final String v3 = "v3";
 
-    private final double approximationRate = 0.05;
+    private final double approximationRate = 0.01;
 
     private double epsilon = 1e-200;
 
@@ -217,13 +217,13 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v5);
         g.addVertex(v6);
         edge = g.addEdge(v1, v3);
-        g.setEdgeWeight(edge, 10000.0);
+        g.setEdgeWeight(edge, 1000000.0);
         edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, .001);
         edge = g.addEdge(v3, v4);
-        g.setEdgeWeight(edge, 100.0);
+        g.setEdgeWeight(edge, 1.0);
         edge = g.addEdge(v4, v5);
-        g.setEdgeWeight(edge, 10000.0);
+        g.setEdgeWeight(edge, 1000000.0);
         edge = g.addEdge(v4, v6);
         g.setEdgeWeight(edge, .001);
         List<String> sources = new LinkedList();
