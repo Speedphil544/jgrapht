@@ -9,7 +9,6 @@ import org.jgrapht.alg.util.extension.ExtensionFactory;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /*
  * @param <V> the graph vertex type.
@@ -138,15 +137,18 @@ public class GargAndKoenemannMMCFImp<V, E>
         return maxFlowValue;
     }
 
-    /**
-     * /**
-     */
+
     public void gargAndKoenemann() {
 
-        int counter = 0;
-        double maxPrimalObjectiveFuntion = 0.0;
+        int counter = 1;
+        double maxPrimalObjectiveFunction = 0.0;
         double minDualObjectiveFunction = Double.POSITIVE_INFINITY;
         double neededForFlowScaling = 1.0;
+
+
+        double finalFlowTest = 0.0;
+        double neededForFLowScalingTest = 0.0;
+
 
         while (true) {
 
@@ -202,6 +204,22 @@ public class GargAndKoenemannMMCFImp<V, E>
             maxFlowValueForEachDemand.put(pair, maxFlowValueForEachDemand.get(pair) + smallestCapacity);
 
 
+
+
+
+
+
+/*
+
+
+
+
+
+
+
+
+
+
             // finish earlier with acceptable result
             Double mostViolatedEdgeViolation = 0.0;
             for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
@@ -209,28 +227,38 @@ public class GargAndKoenemannMMCFImp<V, E>
                     mostViolatedEdgeViolation = e.flow / e.capacity;
                 }
             }
+
+
             double intermediatePrimalObjectiveFuntion = maxFlowValue / mostViolatedEdgeViolation;
-            if (comparator.compare(intermediatePrimalObjectiveFuntion, maxPrimalObjectiveFuntion) > 0) {
-                maxPrimalObjectiveFuntion = intermediatePrimalObjectiveFuntion;
+            System.out.println(counter + " " +maxPrimalObjectiveFunction + ", " + intermediatePrimalObjectiveFuntion);
+            if (comparator.compare(intermediatePrimalObjectiveFuntion, maxPrimalObjectiveFunction) >= 0) {
+                maxPrimalObjectiveFunction = intermediatePrimalObjectiveFuntion;
+                finalFlowTest = maxFlowValue;
+                neededForFLowScalingTest = shortestPathWeight;
             }
+
             double intermediateDualObjectiveFunction = Math.pow(shortestPathWeight, -1) * networkCopy.edgeSet().stream().mapToDouble(e -> networkCopy.getEdgeWeight(e) * e.capacity).sum();
+            System.out.println(minDualObjectiveFunction + ", " + intermediateDualObjectiveFunction);
             if (comparator.compare(intermediateDualObjectiveFunction, minDualObjectiveFunction) <= 0) {
                 minDualObjectiveFunction = intermediateDualObjectiveFunction;
             }
-            if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFuntion, 1 + approximationRate) <= 0 ) {
-                neededForFlowScaling = shortestPathWeight;
+            if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFunction, 1 + approximationRate) <= 0 || counter==2) {
+
+
                 break;
             }
 
+
+
+            neededForFlowScaling = shortestPathWeight;
+*/
             counter++;
 
         }
 
-
         //scale the flow
+
         scaleFlow(neededForFlowScaling);
-
-
     }
 
 

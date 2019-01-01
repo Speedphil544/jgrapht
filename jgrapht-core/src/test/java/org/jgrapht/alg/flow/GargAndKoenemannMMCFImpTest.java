@@ -29,7 +29,7 @@ public class GargAndKoenemannMMCFImpTest {
 
     private final String v3 = "v3";
 
-    private final double approximationRate = 0.01;
+    private final double approximationRate = 0.1;
 
     private double epsilon = 1e-200;
 
@@ -98,10 +98,10 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v2);
         g.addVertex(v3);
         edge = g.addEdge(v1, v2);
-        g.setEdgeWeight(edge, 10000.0);
+        g.setEdgeWeight(edge, 1.0);
         edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, 1.0);
-        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
+        gargAndKoenemann = new GargAndKoenemannAdvancedMMCFlowImp<>(g, epsilon);
         List<String> sources = new LinkedList();
         sources.add(v1);
         List<String> sinks = new LinkedList();
@@ -219,20 +219,20 @@ public class GargAndKoenemannMMCFImpTest {
         edge = g.addEdge(v1, v3);
         g.setEdgeWeight(edge, 1000000.0);
         edge = g.addEdge(v2, v3);
-        g.setEdgeWeight(edge, .001);
+        g.setEdgeWeight(edge, 11.0);
         edge = g.addEdge(v3, v4);
-        g.setEdgeWeight(edge, 1.0);
+        g.setEdgeWeight(edge, 50);
         edge = g.addEdge(v4, v5);
-        g.setEdgeWeight(edge, 1000000.0);
+        g.setEdgeWeight(edge, 10);
         edge = g.addEdge(v4, v6);
-        g.setEdgeWeight(edge, .001);
+        g.setEdgeWeight(edge, 11);
         List<String> sources = new LinkedList();
         sources.add(v1);
         sources.add(v2);
         List<String> sinks = new LinkedList();
         sinks.add(v5);
         sinks.add(v6);
-        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
+        gargAndKoenemann = new GargAndKoenemannAdvancedMMCFlowImp<>(g, epsilon);
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
         System.out.println(flow);
     }
@@ -247,7 +247,7 @@ public class GargAndKoenemannMMCFImpTest {
     public void vieleDemandsTest() {
         List<String> sources = new LinkedList();
         List<String> sinks = new LinkedList();
-        int demandSize = 1000;
+        int demandSize = 100;
         for (int i = 0; i < demandSize; i++) {
             g.addVertex("v" + Integer.toString(i));
             sources.add("v" + Integer.toString(i));
@@ -256,11 +256,12 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex("special");
         g.addVertex("end");
         edge = g.addEdge("special", "end");
+        g.setEdgeWeight(edge, 100.0);
         for (int i = 0; i < demandSize; i++) {
             edge = g.addEdge("v" + Integer.toString(i), "special");
             g.setEdgeWeight(edge, 1.0);
         }
-        g.setEdgeWeight(edge, 1.0);
+       ;
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
 

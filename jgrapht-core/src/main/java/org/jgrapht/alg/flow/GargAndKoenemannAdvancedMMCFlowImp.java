@@ -2,6 +2,7 @@ package org.jgrapht.alg.flow;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
@@ -112,16 +113,22 @@ public class GargAndKoenemannAdvancedMMCFlowImp<V, E>
         for (int i = 0; i < demandSize; i++) {
             currentDemands.add(new Pair(getVertexExtension(sources.get(i)), getVertexExtension(sinks.get(i))));
         }
-
-
         gargAndKoenemann();
-
         return maxFlowValue;
     }
 
     public void gargAndKoenemann() {
-        int counter = 0;
 
+        int counter = 0;
+        AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(this.networkCopy);
+        List<AnnotatedFlowEdge> relevantEdgesInNetworkCopy = new LinkedList<>();
+        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
+            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPaths.getAllPaths(demand.getFirst(), demand.getSecond(), true, null)) {
+                for (AnnotatedFlowEdge e : path.getEdgeList()) {
+                    relevantEdgesInNetworkCopy.add(e);
+                }
+            }
+        }
 
         while (true) {
 
@@ -153,25 +160,23 @@ public class GargAndKoenemannAdvancedMMCFlowImp<V, E>
             if (comparator.compare(shortestPath.getWeight(), delta * b) >= 0) {
                 break;
             }
-
             // check if we need to update the length of the edges
-            double shortestEdgeValue = shortestPath.getEdgeList().stream().map(networkCopy::getEdgeWeight).sorted().findFirst().orElse(null);
-            System.out.println(shortestEdgeValue);
-            if (comparator.compare(shortestEdgeValue, delta) < 0) {
-                System.out.println(shortestEdgeValue);
+            boolean scaleLengthOfAllEdges = true;
+            for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+                if (comparator.compare(networkCopy.getEdgeWeight(e), delta * lengthOfLongestPath) * (1 + this.accuracy) <= 0) {
+                    scaleLengthOfAllEdges = false;
+                }
             }
-            if (comparator.compare(shortestEdgeValue / (2 * lengthOfLongestPath), delta * lengthOfLongestPath * (1 + accuracy)) > 0.0) {
+            if (scaleLengthOfAllEdges) {
                 divisionCounter++;
                 for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
                     networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) / (lengthOfLongestPath * (1 + this.accuracy)));
                 }
             }
-
-
             //get smallest capacity
             Double smallestCapacity = Double.POSITIVE_INFINITY;
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
-                double newCapacity = networkCopy.getEdgeWeight(e);
+                double newCapacity = e.capacity;
                 if (comparator.compare(newCapacity, smallestCapacity) < 0) {
                     smallestCapacity = e.capacity;
                 }
@@ -192,7 +197,7 @@ public class GargAndKoenemannAdvancedMMCFlowImp<V, E>
 
             counter++;
             if (counter % 100 == 0) {
-                // System.out.println(shortestPathWeight);
+                 System.out.println(shortestPathWeight);
             }
         }
         //scale the flow
