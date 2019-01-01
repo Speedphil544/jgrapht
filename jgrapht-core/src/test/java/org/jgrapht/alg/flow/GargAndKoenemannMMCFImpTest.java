@@ -108,37 +108,9 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add(v3);
         double flow = 1.0;
         System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
-        assertTrue(comparator.compare(Math.abs(1.0 - flow), approximationRate * 1.0) <= 0);
+
     }
 
-    /*
-   @Test
-   Wie im vorigen Test hat der Graph 3 Knoten(1,2,3) und 2 Kanten([1,2],[2,3]).
-   Aber die Kapazitaeten sind diesmal gleich mit 1.0, und wir haben zwei demands: (1,2), (1,3).
-   Da der pfad fuer den zweiten demand immer laenger ist als der pfad fuer den ersten demand, wird zuerst
-   die laenge der kante [1,2] auf einen wert groeser als  1.0 gebracht, bevor die kante [2,3]
-   ueberhaupt angeschaut wird...
-   Zu diesem zeitpunkt hat folglich [1,2] eine laenge groesser 1.0 und [2,3] die laenge delta.
-    public void zweiDemandsAufEinemPfadTest() {
-        g.addVertex(v1);
-        g.addVertex(v2);
-        g.addVertex(v3);
-        edge = g.addEdge(v1, v2);
-        g.setEdgeWeight(edge, 1.0);
-        edge = g.addEdge(v2, v3);
-        g.setEdgeWeight(edge, 1.0);
-        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
-        List<String> sources = new LinkedList();
-        sources.add(v1);
-        sources.add(v1);
-        List<String> sinks = new LinkedList();
-        sinks.add(v2);
-        sinks.add(v3);
-        double flow = 1.0;
-        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
-        //assertTrue(comparator.compare(Math.abs(1.0 - flow), approximationRate * 1.0) <= 0);
-    }
-    */
 
 
     @Test
@@ -192,7 +164,7 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add(v2);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
-        assertTrue(comparator.compare(Math.abs(0.0 - flow), approximationRate * 1.0) <= 0);
+       System.out.println(flow);
     }
 
 
@@ -217,7 +189,7 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v5);
         g.addVertex(v6);
         edge = g.addEdge(v1, v3);
-        g.setEdgeWeight(edge, 1000000.0);
+        g.setEdgeWeight(edge, 100.0);
         edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, 11.0);
         edge = g.addEdge(v3, v4);
