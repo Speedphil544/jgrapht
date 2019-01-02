@@ -29,7 +29,7 @@ public class GargAndKoenemannMMCFImpTest {
 
     private final String v3 = "v3";
 
-    private final double approximationRate = 0.1;
+    private final double approximationRate = 0.01;
 
     private double epsilon = 1e-200;
 
@@ -93,15 +93,15 @@ public class GargAndKoenemannMMCFImpTest {
     unterschiedlich ausgepraegt ist und wir eine hohe Anzahl an Iterationen haben, sind die Laengen der Kanten sehr
     unterschiedlich...
     */
-    public void unterschiedlicheKapazitaetTest() {
+    public void Test1() {
         g.addVertex(v1);
         g.addVertex(v2);
         g.addVertex(v3);
         edge = g.addEdge(v1, v2);
         g.setEdgeWeight(edge, 1.0);
         edge = g.addEdge(v2, v3);
-        g.setEdgeWeight(edge, 1.0);
-        gargAndKoenemann = new GargAndKoenemannAdvancedMMCFlowImp<>(g, epsilon);
+        g.setEdgeWeight(edge, 10.0);
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         List<String> sources = new LinkedList();
         sources.add(v1);
         List<String> sinks = new LinkedList();
@@ -119,7 +119,7 @@ public class GargAndKoenemannMMCFImpTest {
      Diese konstellation ist nicht weiter schlimm, da die kante aus dem pfad des ersten demands maximal
      n mal so lang ist wie die laengste aus dem zweiten demand.
      */
-    public void unteschiedlichLangePfadeTest() {
+    public void Test2() {
         int numberOFEdges = 1000;
         for (int i = 0; i < numberOFEdges; i++) {
             g.addVertex("v" + Integer.toString(i));
@@ -174,11 +174,11 @@ public class GargAndKoenemannMMCFImpTest {
     wobei wir wieder sehr unterschiedliche kapazitaeten verteilen (bitte dem code entnehmen)
     es faellt auf, dass die laenge der kante [3,4] mit abstand am schnellsten waechst:
     [3,4] hat viel weniger kapazitaet als [1,3] und [4,5]. [1,3] waechst also, wie wir dank
-    unterschiedlicheKapazitaetTest wissen, sehr viel schneller als [1,3] und [4,5].
+    Test1 wissen, sehr viel schneller als [1,3] und [4,5].
     Aber [2,3] und [4,6] koennen nicht schneller wachsen als [1,3] und [4,5], da ja immer der kuerzeste pfad gewaehlt wird.
     Also waechst [3,4] sehr schneller als alle vier anderen kanten.
     */
-    public void zweiDemandsMitUnterschiedichenKapazitaetenTest() {
+    public void Test4() {
         g.addVertex(v1);
         g.addVertex(v2);
         g.addVertex(v3);
@@ -189,24 +189,24 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v5);
         g.addVertex(v6);
         edge = g.addEdge(v1, v3);
-        g.setEdgeWeight(edge, 100.0);
+        g.setEdgeWeight(edge, 100);
         edge = g.addEdge(v2, v3);
-        g.setEdgeWeight(edge, 11.0);
+        g.setEdgeWeight(edge, 1);
         edge = g.addEdge(v3, v4);
-        g.setEdgeWeight(edge, 50);
-        edge = g.addEdge(v4, v5);
         g.setEdgeWeight(edge, 10);
+        edge = g.addEdge(v4, v5);
+        g.setEdgeWeight(edge, 100);
         edge = g.addEdge(v4, v6);
-        g.setEdgeWeight(edge, 11);
+        g.setEdgeWeight(edge, 1);
         List<String> sources = new LinkedList();
         sources.add(v1);
         sources.add(v2);
         List<String> sinks = new LinkedList();
         sinks.add(v5);
         sinks.add(v6);
-        gargAndKoenemann = new GargAndKoenemannAdvancedMMCFlowImp<>(g, epsilon);
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
-        System.out.println(flow);
+        //System.out.println(flow);
     }
 
 
@@ -216,7 +216,7 @@ public class GargAndKoenemannMMCFImpTest {
     kapazitaeten sind alle gleich 1.0
     Diese konstellation ist  nicht weiter schlimm, [special,end] waechst nicht schneller als die anderen kanten.
     */
-    public void vieleDemandsTest() {
+    public void Test5() {
         List<String> sources = new LinkedList();
         List<String> sinks = new LinkedList();
         int demandSize = 100;

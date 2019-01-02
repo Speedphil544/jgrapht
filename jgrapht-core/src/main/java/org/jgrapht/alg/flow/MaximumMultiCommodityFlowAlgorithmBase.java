@@ -1,7 +1,6 @@
 package org.jgrapht.alg.flow;
 
 import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.MaximumMultiCommodityFlowAlgorithm;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.alg.util.ToleranceDoubleComparator;
@@ -49,23 +48,19 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     protected Map<E, Double> maxFlow = null;
     /* List of mappings for each demand, */
     public Map<Pair<V, V>, Map<E, Double>> mapOfFlowsForEachDemand = null;
-
     int divisionCounter = 0;
-    GraphPath<VertexExtensionBase, AnnotatedFlowEdge> pathWithMostEdges = null;
-
-
     /* A copy of the network, that uses a length function as weights, needed for dijkstraShortestPath*/
     public Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopy;
     /* the weight that the copied edges are initialized with*/
     protected double delta = 0;
-    // accuracy depending on the wanted approximation rate
+    /* accuracy depending on the wanted approximation rate*/
     protected double accuracy = 0;
-    // save a little bit of computation time
+    /* save a little bit of computation time*/
     int demandSize = 0;
+    /*  need for the initalization*/
     double lengthOfLongestPath = 0.0;
-    //newDataStructure[ (Pairs of sources and sinks)
+    /* representation of sources and sinks*/
     List<Pair<VertexExtensionBase, VertexExtensionBase>> demands = null;
-    // ]new Data Structure
 
     /**
      * Construct a new maximum flow
@@ -103,8 +98,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
         this.demandSize = sinks.size();
         demands = new LinkedList<Pair<VertexExtensionBase, VertexExtensionBase>>();
-
-
         for (int i = 0; i < demandSize; i++) {
             VertexExtensionBase source = vertexExtensionManager.getExtension(sources.get(i));
             VertexExtensionBase sink = vertexExtensionManager.getExtension(sinks.get(i));
@@ -113,48 +106,13 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
             demands.add(new Pair(source, sink));
 
         }
-
-        // needed for delta, maybe we should change this to the number of Edges... Wrong Input results in Error
-/*
-        AllDirectedPaths<V, E> alldirectedPaths = new AllDirectedPaths(this.network);
-
-
-        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
-            for (GraphPath path : alldirectedPaths.getAllPaths(demand.getFirst().prototype, demand.getSecond().prototype, true, null)) {
-                if (path.getLength() > lengthOfLongestPath) {
-                    lengthOfLongestPath = path.getLength();
-                }
-            }
-
-        }
-  */
-        // lengthOfLongestPath = network.edgeSet().size();
-
-
         buildInternal();
-/*        System.out.println(lengthOfLongestPath);
-        AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> alldirectedPaths2 = new AllDirectedPaths(this.networkCopy);
-        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
-            for (GraphPath path : alldirectedPaths2.getAllPaths(demand.getFirst(), demand.getSecond(), true, null)) {
-                if (path.getLength() == lengthOfLongestPath) {
-                    pathWithMostEdges = path;
-                }
-            }
-
-        }
-
-        System.out.println("lalala");
-  */
         maxFlowValue = 0;
         maxFlow = null;
         mapOfFlowsForEachDemand = null;
-
-
         maxFlowValueForEachDemand = new HashMap<>();
-
         for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
             maxFlowValueForEachDemand.put(new Pair(demand.getFirst().prototype, demand.getSecond().prototype), 0.0);
-
         }
     }
 

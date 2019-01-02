@@ -17,7 +17,7 @@ import java.util.List;
  * @author
  */
 
-public class GargAndKoenemannAdvancedMMCFlowImp<V, E>
+public class GargAndKoenemannAdvancedMMCFImp<V, E>
         extends
         MaximumMultiCommodityFlowAlgorithmBase<V, E> {
     private final ExtensionFactory<VertexExtension> vertexExtensionsFactory;
@@ -33,7 +33,7 @@ public class GargAndKoenemannAdvancedMMCFlowImp<V, E>
      * @param network the network on which we calculate the maximum flow.
      * @param epsilon the tolerance for the comparison of floating point values.
      */
-    public GargAndKoenemannAdvancedMMCFlowImp(Graph<V, E> network, double epsilon) {
+    public GargAndKoenemannAdvancedMMCFImp(Graph<V, E> network, double epsilon) {
 
         super(network, epsilon);
         this.vertexExtensionsFactory = VertexExtension::new;
@@ -56,7 +56,7 @@ public class GargAndKoenemannAdvancedMMCFlowImp<V, E>
      *
      * @param network the network on which we calculate the maximum flow.
      */
-    public GargAndKoenemannAdvancedMMCFlowImp(Graph<V, E> network) {
+    public GargAndKoenemannAdvancedMMCFImp(Graph<V, E> network) {
         this(network, DEFAULT_EPSILON);
     }
 
@@ -122,13 +122,18 @@ public class GargAndKoenemannAdvancedMMCFlowImp<V, E>
         int counter = 0;
         AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(this.networkCopy);
         List<AnnotatedFlowEdge> relevantEdgesInNetworkCopy = new LinkedList<>();
+
+        int numberOfPaths = 0;
+
         for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
             for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPaths.getAllPaths(demand.getFirst(), demand.getSecond(), true, null)) {
                 for (AnnotatedFlowEdge e : path.getEdgeList()) {
                     relevantEdgesInNetworkCopy.add(e);
                 }
+                numberOfPaths++;
             }
         }
+        System.out.println(numberOfPaths);
 
         while (true) {
 
@@ -197,7 +202,7 @@ public class GargAndKoenemannAdvancedMMCFlowImp<V, E>
 
             counter++;
             if (counter % 100 == 0) {
-                 System.out.println(shortestPathWeight);
+                System.out.println(shortestPathWeight);
             }
         }
         //scale the flow
