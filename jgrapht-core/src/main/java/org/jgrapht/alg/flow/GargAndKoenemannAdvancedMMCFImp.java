@@ -121,19 +121,49 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
 
         int counter = 0;
         AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(this.networkCopy);
+        LinkedList<GraphPath> allDirectedPathsOfAllDemands = new LinkedList<>();
+
+
         List<AnnotatedFlowEdge> relevantEdgesInNetworkCopy = new LinkedList<>();
 
-        int numberOfPaths = 0;
 
         for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
             for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPaths.getAllPaths(demand.getFirst(), demand.getSecond(), true, null)) {
-                for (AnnotatedFlowEdge e : path.getEdgeList()) {
-                    relevantEdgesInNetworkCopy.add(e);
-                }
-                numberOfPaths++;
+                allDirectedPathsOfAllDemands.add(path);
             }
         }
-        System.out.println(numberOfPaths);
+        for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> currentpath : allDirectedPathsOfAllDemands) {
+            List currentEdgeList = currentpath.getEdgeList();
+            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
+                if (currentpath != path) {
+                    boolean pathIsASubPathOfCurrentPath = true;
+                    List<AnnotatedFlowEdge> edgeList = path.getEdgeList();
+                    for (AnnotatedFlowEdge edge : edgeList) {
+                        if (!currentEdgeList.contains(edge)) {
+                            pathIsASubPathOfCurrentPath = false;
+                            break;
+                        }
+                    }
+                    if (pathIsASubPathOfCurrentPath) {
+                        allDirectedPathsOfAllDemands.remove(currentpath);
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
+            for (AnnotatedFlowEdge e : path.getEdgeList()) {
+                relevantEdgesInNetworkCopy.add(e);
+            }
+        }
+        for (AnnotatedFlowEdge edge : networkCopy.edgeSet()) {
+            if (!relevantEdgesInNetworkCopy.contains(edge)) {
+                networkCopy.removeEdge(edge);
+            }
+
+        }
+
 
         while (true) {
 
@@ -154,6 +184,8 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
                     }
                 }
             }
+
+
             // if there are no valid paths, break and set flow = zeroMapping
             if (!pathsExist) {
                 System.out.println("no paths");
@@ -167,7 +199,7 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
             }
             // check if we need to update the length of the edges
             boolean scaleLengthOfAllEdges = true;
-            for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+            for (AnnotatedFlowEdge e : relevantEdgesInNetworkCopy) {
                 if (comparator.compare(networkCopy.getEdgeWeight(e), delta * lengthOfLongestPath) * (1 + this.accuracy) <= 0) {
                     scaleLengthOfAllEdges = false;
                 }
