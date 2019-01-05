@@ -119,6 +119,9 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
 
     public void gargAndKoenemann() {
 
+
+
+        // get rid of useless edges
         int counter = 0;
         AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(this.networkCopy);
         LinkedList<GraphPath> allDirectedPathsOfAllDemands = new LinkedList<>();
@@ -184,8 +187,6 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
                     }
                 }
             }
-
-
             // if there are no valid paths, break and set flow = zeroMapping
             if (!pathsExist) {
                 System.out.println("no paths");
@@ -206,6 +207,7 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
             }
             if (scaleLengthOfAllEdges) {
                 divisionCounter++;
+
                 for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
                     networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) / (lengthOfLongestPath * (1 + this.accuracy)));
                 }
