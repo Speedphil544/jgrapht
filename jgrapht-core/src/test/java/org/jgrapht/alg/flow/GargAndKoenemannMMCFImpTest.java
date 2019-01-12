@@ -66,15 +66,15 @@ public class GargAndKoenemannMMCFImpTest {
 
     @Test
     /*
-    hier verwenden wir einen Zufallsgraphen mit vorgegebener Knotenzahl, Kantenwahrscheinlkichkeit,min/maxlkapazitaeten
+    Here we test the algorithm on a random graph (properties of the random of the graph can be modified)
     */
-    public void ZufallsGraphTest() {
+    public void RandomGraphTest() {
         g = createRandomGraph(3, 1, 1, 2);
         List<String> sources = new LinkedList();
         sources.add("v1");
         List<String> sinks = new LinkedList();
         sinks.add("v3");
-        gargAndKoenemann = new GargAndKoenemannMMCFImp(g);
+        gargAndKoenemann = new GargAndKoenemannMMCFImp(g, epsilon);
         MaximumMultiCommodityFlowAlgorithm.MaximumFlow flow = gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate);
         System.out.println(flow);
 
@@ -82,36 +82,12 @@ public class GargAndKoenemannMMCFImpTest {
 
 
     @Test
-
-    public void Test0() {
-        g.addVertex(v1);
-        g.addVertex(v2);
-        g.addVertex(v3);
-        edge = g.addEdge(v1, v2);
-        g.setEdgeWeight(edge, 1.0);
-        edge = g.addEdge(v2, v3);
-        g.setEdgeWeight(edge, 10.0);
-        List<String> sources = new LinkedList();
-        sources.add("v1");
-
-        List<String> sinks = new LinkedList();
-        sinks.add("v3");
-
-
-        gargAndKoenemann = new GargAndKoenemannAdvancedMMCFImp(g);
-        gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate);
-
-    }
-
-
-    @Test
     /*
-    Hier testen wir den GargAndKoenemann auf einem Graphen, der 3 Knoten (1,2,3)
-    und 2 Kanten([1,2],[2,3]) mit sehr unterschiedlichem Gewicht entaehlt.
-    Dazu den folgenden demand: (1,2)
-    Es faellt auf, dass die Laengen der Kanten exponentiel unterschiedlich wachsen. Wenn das Gewicht sehr
-    unterschiedlich ausgepraegt ist und wir eine hohe Anzahl an Iterationen haben, sind die Laengen der Kanten sehr
-    unterschiedlich...
+    Here we test the algorithm on a graph with 3 nodes (1,2,3)
+    and two edges ([1,2],[2,3]). The edges have very different capacities.
+    The demand: (1,2).
+    We notice: the length of the edge with the higher capacity grows much slower than the one with the lower capacity.
+    This might lead to a problem: we dont want to have a big ratio of our edge lengths.
     */
     public void Test1() {
         g.addVertex(v1);
@@ -131,73 +107,16 @@ public class GargAndKoenemannMMCFImpTest {
 
     }
 
-
-    @Test
-    /*hier testen wir den GargAndKoeneMann auf einem Graphen, mit folgenden kanten: ([1,2],[2,3],[3,4],...),
-     Kapazitaet jeder kante ist 1.0 und wir haben 2 demands: (1,2), (2,n).
-     Diese konstellation ist nicht weiter schlimm, da die kante aus dem pfad des ersten demands maximal
-     n mal so lang ist wie die laengste aus dem zweiten demand.
-     */
-    public void Test2() {
-        int numberOFEdges = 1000;
-        for (int i = 0; i < numberOFEdges; i++) {
-            g.addVertex("v" + Integer.toString(i));
-        }
-        for (int i = 0; i < numberOFEdges - 1; i++) {
-            edge = g.addEdge("v" + Integer.toString(i), "v" + Integer.toString(i + 1));
-            g.setEdgeWeight(edge, 1.0);
-        }
-        List<String> sources = new LinkedList();
-        sources.add("v0");
-        sources.add("v1");
-        List<String> sinks = new LinkedList();
-        sinks.add("v1");
-        sinks.add("v" + Integer.toString(numberOFEdges - 1));
-        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
-        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    /*
-    testen, was passiert, wenn keine senke vorhanden ist.
-    */
-    public void Test3() {
-        g.addVertex(v1);
-        List<String> sources = new LinkedList();
-        sources.add(v1);
-        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
-        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sources, approximationRate);
-    }
-
     @Test
     /*
-    testen,was passiert, wenn quelle und senke nicht zusammenhaengen
+    nodes: (1,2,3,4,5,6), edges: ([1,3],[2,3],[3,4],[4,5],[5,6]),  demands: (1,5) (2,6).
+    Again, we have very different edge weight(take a look at the code).
+    edge [3,4] grows fastest by far!
+    [3,4] has less capacity than [1,3] and [4,5]. That is why [1,3] grows faster, than [1,3] and [4,5].
+    But [2,3] and [4,6] grow faste than [1,3] und [4,5], since we always choose the shortest path.
+    ->  [3,4] grows faster than all the other edges
     */
-    public void disconnectedTest() {
-        g.addVertex(v1);
-        g.addVertex(v2);
-        List<String> sources = new LinkedList();
-        sources.add(v1);
-        List<String> sinks = new LinkedList();
-        sinks.add(v2);
-        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
-        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
-        System.out.println(flow);
-    }
-
-
-    @Test
-    /*
-    haben die knoten (1,2,3,4,5,6), die Kanten ([1,3],[2,3],[3,4],[4,5],[5,6]) und demands: (1,5) (2,6)
-    wobei wir wieder sehr unterschiedliche kapazitaeten verteilen (bitte dem code entnehmen)
-    es faellt auf, dass die laenge der kante [3,4] mit abstand am schnellsten waechst:
-    [3,4] hat viel weniger kapazitaet als [1,3] und [4,5]. [1,3] waechst also, wie wir dank
-    Test1 wissen, sehr viel schneller als [1,3] und [4,5].
-    Aber [2,3] und [4,6] koennen nicht schneller wachsen als [1,3] und [4,5], da ja immer der kuerzeste pfad gewaehlt wird.
-    Also waechst [3,4] sehr schneller als alle vier anderen kanten.
-    */
-    public void Test4() {
+    public void Test1b() {
         g.addVertex(v1);
         g.addVertex(v2);
         g.addVertex(v3);
@@ -208,13 +127,13 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v5);
         g.addVertex(v6);
         edge = g.addEdge(v1, v3);
-        g.setEdgeWeight(edge, 100);
+        g.setEdgeWeight(edge, 10000);
         edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, 1);
         edge = g.addEdge(v3, v4);
         g.setEdgeWeight(edge, 10);
         edge = g.addEdge(v4, v5);
-        g.setEdgeWeight(edge, 100);
+        g.setEdgeWeight(edge, 10000);
         edge = g.addEdge(v4, v6);
         g.setEdgeWeight(edge, 1);
         List<String> sources = new LinkedList();
@@ -225,7 +144,90 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add(v6);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
-        //System.out.println(flow);
+
+    }
+
+    @Test
+    /*Here we test the algorithm on a graph with following edges(and corresponding nodes ofc.): ([1,2],[2,3],[3,4],...),
+     c(e)=1.0 f.a. e in E. Two demands: (1,2), (2,n).
+     We notice: everything works fine.
+     */
+    public void Test2() {
+        int numberOfEdges = 1000;
+        for (int i = 0; i < numberOfEdges; i++) {
+            g.addVertex("v" + Integer.toString(i));
+        }
+        for (int i = 0; i < numberOfEdges - 1; i++) {
+            edge = g.addEdge("v" + Integer.toString(i), "v" + Integer.toString(i + 1));
+            g.setEdgeWeight(edge, 1.0);
+        }
+        List<String> sources = new LinkedList();
+        sources.add("v0");
+        sources.add("v1");
+        List<String> sinks = new LinkedList();
+        sinks.add("v1");
+        sinks.add("v" + Integer.toString(numberOfEdges - 1));
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
+        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
+    }
+
+
+    @Test(expected = IllegalArgumentException.class)
+    /*
+   We test what happens if there is no sink
+    */
+    public void Test3a() {
+        g.addVertex(v1);
+        List<String> sources = new LinkedList();
+        sources.add(v1);
+        List<String> sinks = new LinkedList<>();
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
+        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    /*
+   We test what happens if a source is equal to its sink
+    */
+    public void Test3b() {
+        g.addVertex(v1);
+        List<String> sources = new LinkedList();
+        sources.add(v1);
+        List<String> sinks = new LinkedList<>();
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
+        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sources, approximationRate);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    /*
+   We test what happens if we have not the same number of sources and sinks
+    */
+    public void Test3c() {
+        g.addVertex(v1);
+        g.addVertex(v2);
+        List<String> sources = new LinkedList();
+        sources.add(v1);
+        sources.add(v2);
+        List<String> sinks = new LinkedList<>();
+        sinks.add(v1);
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
+        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sources, approximationRate);
+    }
+
+    @Test
+    /*
+    We test what happens if there are no valid paths
+    */
+    public void Test3d() {
+        g.addVertex(v1);
+        g.addVertex(v2);
+        List<String> sources = new LinkedList();
+        sources.add(v1);
+        List<String> sinks = new LinkedList();
+        sinks.add(v2);
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
+        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
+        System.out.println(flow);
     }
 
 

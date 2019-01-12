@@ -99,6 +99,9 @@ public class GargAndKoenemannMMCFImp<V, E>
      */
     private double calculateMaxFlow(List<V> sources, List<V> sinks, double approximationRate) {
 
+        this.demandSize = sinks.size();
+
+
         if (sources == (null)) {
             throw new IllegalArgumentException("Network does not contain sources!");
         }
@@ -119,13 +122,12 @@ public class GargAndKoenemannMMCFImp<V, E>
             }
         }
         for (int i = 0; i < demandSize; i++) {
+            System.out.println(i);
             if (sinks.get(i).equals(sources.get(i))) {
                 throw new IllegalArgumentException("A source is equal to its sink!");
             }
         }
         this.approximationRate = approximationRate;
-
-
         this.accuracy = 1 - Math.pow(1 + approximationRate, -0.5);
         this.delta = (1 + accuracy) * Math.pow(lengthOfLongestPath * (1 + accuracy), -1 / accuracy);
         assert (comparator.compare(delta, 0.0) != 0) : "Delta too small: " + delta;
@@ -138,6 +140,68 @@ public class GargAndKoenemannMMCFImp<V, E>
     }
 
 
+    private class BreakingCriterions {
+        double maxPrimalObjectiveFunction;
+        double minDualObjectiveFunction;
+        double neededForFlowScaling;
+
+        public BreakingCriterions() {
+            double maxPrimalObjectiveFunction = 0.0;
+            double minDualObjectiveFunction = Double.POSITIVE_INFINITY;
+            double neededForFlowScaling = 1.0;
+
+        }
+
+        public boolean actualizeStats(boolean pathsExist, double shortestPathWeight) {
+
+
+            // if there are no valid paths, break and set flow = zeroMapping
+            if (!pathsExist) {
+                System.out.println("There are no valid paths from a source to its sink");
+                return true;
+            }
+            // breaking condition, we stop when shortest path hast length bigger or equal to 1
+            if (comparator.compare(shortestPathWeight, 1.0) >= 0) {
+                return true;
+            }
+
+
+            // finish earlier with acceptable result
+
+            // first we find out which edge is most violated, in order to get a feasible solution
+            Double mostViolatedEdgeViolation = 1.0;
+            for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+                if (comparator.compare(e.flow / e.capacity, mostViolatedEdgeViolation) > 0) {
+                    mostViolatedEdgeViolation = e.flow / e.capacity;
+                }
+
+
+            }
+            // we update the value of the best flow, if the the value of the current feasible flow is better
+            double intermediatePrimalObjectiveFunction = maxFlowValue / mostViolatedEdgeViolation;
+            //System.out.println(counter + " " + maxPrimalObjectiveFunction + ", " + intermediatePrimalObjectiveFunction);
+            if (comparator.compare(intermediatePrimalObjectiveFunction, maxPrimalObjectiveFunction) >= 0) {
+                maxPrimalObjectiveFunction = intermediatePrimalObjectiveFunction;
+                //finalFlowTest = maxFlowValue;
+                // neededForFLowScalingTest = shortestPathWeight;
+            }
+            // we update the value of the length function if the value of the current length function is better
+            double intermediateDualObjectiveFunction = Math.pow(shortestPathWeight, -1) * networkCopy.edgeSet().stream().mapToDouble(e -> networkCopy.getEdgeWeight(e) * e.capacity).sum();
+            //System.out.println(minDualObjectiveFunction + ", " + intermediateDualObjectiveFunction);
+            if (comparator.compare(intermediateDualObjectiveFunction, minDualObjectiveFunction) <= 0) {
+                minDualObjectiveFunction = intermediateDualObjectiveFunction;
+            }
+            // if the ratio between the best flow and the best length function is small enough, we end the algorithm
+            if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFunction, 1 + approximationRate) <= 0) {
+                //  System.out.println("maxFLowValue " + maxFlowValue/mostViolatedEdgeViolation + ", counter " + counter);
+                return true;
+            }
+
+
+            return false;
+        }
+    }
+
     public void gargAndKoenemann() {
 
         int counter = 1;
@@ -145,6 +209,7 @@ public class GargAndKoenemannMMCFImp<V, E>
         double minDualObjectiveFunction = Double.POSITIVE_INFINITY;
         double neededForFlowScaling = 1.0;
         while (true) {
+
 
             //choose shortest path, its value, its demand
             boolean pathsExist = false;
@@ -163,15 +228,32 @@ public class GargAndKoenemannMMCFImp<V, E>
                     }
                 }
             }
-            // if there are no valid paths, break and set flow = zeroMapping
-            if (!pathsExist) {
-                System.out.println("There are no valid paths from a source to its sink");
-                break;
+
+
+            // first we find out which edge is most violated, in order to get a feasible solution
+            Double mostViolatedEdgeViolation = 1.0;
+            for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
+                if (comparator.compare(e.flow / e.capacity, mostViolatedEdgeViolation) > 0) {
+                    mostViolatedEdgeViolation = e.flow / e.capacity;
+                }
             }
-
-
-            // breaking condition, we stop when shortest path hast length bigger or equal to 1
-            if (comparator.compare(shortestPathWeight, 1.0) >= 0) {
+            // we update the value of the best flow, if the the value of the current feasible flow is better
+            double intermediatePrimalObjectiveFunction = maxFlowValue / mostViolatedEdgeViolation;
+            //System.out.println(counter + " " + maxPrimalObjectiveFunction + ", " + intermediatePrimalObjectiveFunction);
+            if (comparator.compare(intermediatePrimalObjectiveFunction, maxPrimalObjectiveFunction) >= 0) {
+                maxPrimalObjectiveFunction = intermediatePrimalObjectiveFunction;
+                //finalFlowTest = maxFlowValue;
+                // neededForFLowScalingTest = shortestPathWeight;
+            }
+            // we update the value of the length function if the value of the current length function is better
+            double intermediateDualObjectiveFunction = Math.pow(shortestPathWeight, -1) * networkCopy.edgeSet().stream().mapToDouble(e -> networkCopy.getEdgeWeight(e) * e.capacity).sum();
+            //System.out.println(minDualObjectiveFunction + ", " + intermediateDualObjectiveFunction);
+            if (comparator.compare(intermediateDualObjectiveFunction, minDualObjectiveFunction) <= 0) {
+                minDualObjectiveFunction = intermediateDualObjectiveFunction;
+            }
+            // if the ratio between the best flow and the best length function is small enough, we end the algorithm
+            if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFunction, 1 + approximationRate) <= 0) {
+                //  System.out.println("maxFLowValue " + maxFlowValue/mostViolatedEdgeViolation + ", counter " + counter);
                 break;
             }
 
@@ -198,40 +280,13 @@ public class GargAndKoenemannMMCFImp<V, E>
             maxFlowValueForEachDemand.put(pair, maxFlowValueForEachDemand.get(pair) + smallestCapacity);
 
 
-            // finish earlier with acceptable result
-            Double mostViolatedEdgeViolation = 0.0;
-            for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
-                if (comparator.compare(e.flow / e.capacity, mostViolatedEdgeViolation) > 0) {
-                    mostViolatedEdgeViolation = e.flow / e.capacity;
-                }
-            }
-
-
-            double intermediatePrimalObjectiveFuntion = maxFlowValue / mostViolatedEdgeViolation;
-            //System.out.println(counter + " " + maxPrimalObjectiveFunction + ", " + intermediatePrimalObjectiveFuntion);
-            if (comparator.compare(intermediatePrimalObjectiveFuntion, maxPrimalObjectiveFunction) >= 0) {
-                maxPrimalObjectiveFunction = intermediatePrimalObjectiveFuntion;
-                //finalFlowTest = maxFlowValue;
-               // neededForFLowScalingTest = shortestPathWeight;
-            }
-            double intermediateDualObjectiveFunction = Math.pow(shortestPathWeight, -1) * networkCopy.edgeSet().stream().mapToDouble(e -> networkCopy.getEdgeWeight(e) * e.capacity).sum();
-            //System.out.println(minDualObjectiveFunction + ", " + intermediateDualObjectiveFunction);
-            if (comparator.compare(intermediateDualObjectiveFunction, minDualObjectiveFunction) <= 0) {
-                minDualObjectiveFunction = intermediateDualObjectiveFunction;
-            }
-            if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFunction, 1 + approximationRate) <= 0) {
-              //  System.out.println("maxFLowValue " + maxFlowValue/mostViolatedEdgeViolation + ", counter " + counter);
-                break;
-            }
-
-
-           // neededForFlowScaling = shortestPathWeight;
+            // neededForFlowScaling = shortestPathWeight;
 
             counter++;
 
         }
 
-        //scale the flow
+        //scale the flow to make it feasible
 
         scaleFlow(neededForFlowScaling);
     }

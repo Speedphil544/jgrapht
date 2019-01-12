@@ -78,6 +78,8 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
         this.networkCopy = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
         lengthOfLongestPath = network.vertexSet().size();
+
+
     }
 
     /**
@@ -96,7 +98,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
-        this.demandSize = sinks.size();
         demands = new LinkedList<Pair<VertexExtensionBase, VertexExtensionBase>>();
         for (int i = 0; i < demandSize; i++) {
             VertexExtensionBase source = vertexExtensionManager.getExtension(sources.get(i));
