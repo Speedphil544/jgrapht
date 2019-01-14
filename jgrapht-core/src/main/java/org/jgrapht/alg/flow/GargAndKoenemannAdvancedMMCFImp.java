@@ -25,6 +25,7 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
     private List<Pair<VertexExtension, VertexExtension>> currentDemands;
     private Pair<VertexExtension, VertexExtension> currentDemandFlowIsPushedAlong;
 
+    int divisionCounter = 0;
 
     /**
      * Constructor. Constructs a new network on which we will calculate the maximum flow, using
@@ -120,54 +121,6 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
     public void gargAndKoenemann() {
 
 
-
-        // get rid of useless edges
-        int counter = 0;
-        AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(this.networkCopy);
-        LinkedList<GraphPath> allDirectedPathsOfAllDemands = new LinkedList<>();
-
-
-        List<AnnotatedFlowEdge> relevantEdgesInNetworkCopy = new LinkedList<>();
-
-
-        for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
-            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPaths.getAllPaths(demand.getFirst(), demand.getSecond(), true, null)) {
-                allDirectedPathsOfAllDemands.add(path);
-            }
-        }
-        for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> currentpath : allDirectedPathsOfAllDemands) {
-            List currentEdgeList = currentpath.getEdgeList();
-            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
-                if (currentpath != path) {
-                    boolean pathIsASubPathOfCurrentPath = true;
-                    List<AnnotatedFlowEdge> edgeList = path.getEdgeList();
-                    for (AnnotatedFlowEdge edge : edgeList) {
-                        if (!currentEdgeList.contains(edge)) {
-                            pathIsASubPathOfCurrentPath = false;
-                            break;
-                        }
-                    }
-                    if (pathIsASubPathOfCurrentPath) {
-                        allDirectedPathsOfAllDemands.remove(currentpath);
-                        break;
-                    }
-                }
-            }
-        }
-
-        for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
-            for (AnnotatedFlowEdge e : path.getEdgeList()) {
-                relevantEdgesInNetworkCopy.add(e);
-            }
-        }
-        for (AnnotatedFlowEdge edge : networkCopy.edgeSet()) {
-            if (!relevantEdgesInNetworkCopy.contains(edge)) {
-                networkCopy.removeEdge(edge);
-            }
-
-        }
-
-
         while (true) {
 
             //choose shortest path, its value, its demand
@@ -200,7 +153,7 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
             }
             // check if we need to update the length of the edges
             boolean scaleLengthOfAllEdges = true;
-            for (AnnotatedFlowEdge e : relevantEdgesInNetworkCopy) {
+            for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
                 if (comparator.compare(networkCopy.getEdgeWeight(e), delta * lengthOfLongestPath) * (1 + this.accuracy) <= 0) {
                     scaleLengthOfAllEdges = false;
                 }
@@ -234,10 +187,7 @@ public class GargAndKoenemannAdvancedMMCFImp<V, E>
             maxFlowValueForEachDemand.put(pair, maxFlowValueForEachDemand.get(pair) + smallestCapacity);
 
 
-            counter++;
-            if (counter % 100 == 0) {
-                System.out.println(shortestPathWeight);
-            }
+
         }
         //scale the flow
         scaleFlow();

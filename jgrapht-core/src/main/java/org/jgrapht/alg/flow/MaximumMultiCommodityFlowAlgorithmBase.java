@@ -1,7 +1,9 @@
 package org.jgrapht.alg.flow;
 
 import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.MaximumMultiCommodityFlowAlgorithm;
+import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.alg.util.Pair;
 import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.alg.util.extension.Extension;
@@ -48,7 +50,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     protected Map<E, Double> maxFlow = null;
     /* List of mappings for each demand, */
     public Map<Pair<V, V>, Map<E, Double>> mapOfFlowsForEachDemand = null;
-    int divisionCounter = 0;
     /* A copy of the network, that uses a length function as weights, needed for dijkstraShortestPath*/
     public Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopy;
     /* the weight that the copied edges are initialized with*/
@@ -123,6 +124,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     void buildInternal() {
         if (directedGraph) { // Directed graph
 
+
             // add vertices to networkCopy
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
@@ -138,12 +140,55 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 AnnotatedFlowEdge edgeCopy = createEdge(vx, ux, e, network.getEdgeWeight(e));
 
-                // get rid of edges with zero capacity
+                // only use edges with capacity that is not zero
                 if (comparator.compare(edgeCopy.capacity, 0.0) > 0) {
                     networkCopy.addEdge(vx, ux, edgeCopy);
                     networkCopy.setEdgeWeight(vx, ux, delta);
                 }
             }
+
+            // next, we want to get rid of all edges that are not needed for the computation: those who are not contained
+            // in any relevant demand path
+            // it seems a little bit strange to add all edges first and then remove some of them again, but before computing
+            //all paths we must get rid of the edges with zero capacity because otherwise they would be included.
+            AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(this.networkCopy);
+            LinkedList<GraphPath> allDirectedPathsOfAllDemands = new LinkedList<>();
+            List<AnnotatedFlowEdge> relevantEdgesInNetworkCopy = new LinkedList<>();
+            for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
+                for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPaths.getAllPaths(demand.getFirst(), demand.getSecond(), true, null)) {
+                    allDirectedPathsOfAllDemands.add(path);
+                }
+            }
+            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> currentpath : allDirectedPathsOfAllDemands) {
+                List currentEdgeList = currentpath.getEdgeList();
+                for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
+                    if (currentpath != path) {
+                        boolean pathIsASubPathOfCurrentPath = true;
+                        List<AnnotatedFlowEdge> edgeList = path.getEdgeList();
+                        for (AnnotatedFlowEdge edge : edgeList) {
+                            if (!currentEdgeList.contains(edge)) {
+                                pathIsASubPathOfCurrentPath = false;
+                                break;
+                            }
+                        }
+                        if (pathIsASubPathOfCurrentPath) {
+                            allDirectedPathsOfAllDemands.remove(currentpath);
+                            break;
+                        }
+                    }
+                }
+            }
+            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
+                for (AnnotatedFlowEdge e : path.getEdgeList()) {
+                    relevantEdgesInNetworkCopy.add(e);
+                }
+            }
+            for (AnnotatedFlowEdge edge : networkCopy.edgeSet()) {
+                if (!relevantEdgesInNetworkCopy.contains(edge)) {
+                    networkCopy.removeEdge(edge);
+                }
+            }
+
 
         } else { // Undirected graph
             for (V v : network.vertexSet()) {
