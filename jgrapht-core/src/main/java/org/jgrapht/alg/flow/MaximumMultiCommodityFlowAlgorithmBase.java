@@ -58,7 +58,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     protected double accuracy = 0;
     /* save a little bit of computation time*/
     int demandSize = 0;
-    /*  need for the initalization*/
+    /* needed for the initialization*/
     double lengthOfLongestPath = 0.0;
     /* representation of sources and sinks*/
     List<Pair<VertexExtensionBase, VertexExtensionBase>> demands = null;
@@ -125,11 +125,16 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         if (directedGraph) { // Directed graph
 
 
+
+            Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
+            Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
+            Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopyPrototype = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
             // add vertices to networkCopy
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 vx.prototype = v;
                 networkCopy.addVertex(vx);
+                networkCopyPrototype.addVertex(vx);
             }
 
             // add edges to network copy
@@ -142,8 +147,8 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
                 // only use edges with capacity that is not zero
                 if (comparator.compare(edgeCopy.capacity, 0.0) > 0) {
-                    networkCopy.addEdge(vx, ux, edgeCopy);
-                    networkCopy.setEdgeWeight(vx, ux, delta);
+                    networkCopyPrototype.addEdge(vx, ux, edgeCopy);
+                    networkCopyPrototype.setEdgeWeight(vx, ux, delta);
                 }
             }
 
@@ -151,7 +156,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
             // in any relevant demand path
             // it seems a little bit strange to add all edges first and then remove some of them again, but before computing
             //all paths we must get rid of the edges with zero capacity because otherwise they would be included.
-            AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(this.networkCopy);
+            AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(networkCopyPrototype);
             LinkedList<GraphPath> allDirectedPathsOfAllDemands = new LinkedList<>();
             List<AnnotatedFlowEdge> relevantEdgesInNetworkCopy = new LinkedList<>();
             for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
@@ -183,10 +188,9 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                     relevantEdgesInNetworkCopy.add(e);
                 }
             }
-            for (AnnotatedFlowEdge edge : networkCopy.edgeSet()) {
-                if (!relevantEdgesInNetworkCopy.contains(edge)) {
-                    networkCopy.removeEdge(edge);
-                }
+            for (AnnotatedFlowEdge edge : relevantEdgesInNetworkCopy) {
+                networkCopy.addEdge(edge.source, edge.target, edge);
+                networkCopy.setEdgeWeight(edge, delta);
             }
 
 
@@ -206,7 +210,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 //   vx.getOutgoing().add(backwardEdge);
             }
         }
-
+        System.out.println("test2");
 
     }
 

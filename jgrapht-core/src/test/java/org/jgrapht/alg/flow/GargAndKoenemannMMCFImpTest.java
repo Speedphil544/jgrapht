@@ -7,10 +7,7 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class GargAndKoenemannMMCFImpTest {
 
@@ -69,7 +66,7 @@ public class GargAndKoenemannMMCFImpTest {
     Here we test the algorithm on a random graph (properties of the random of the graph can be modified)
     */
     public void RandomGraphTest() {
-        g = createRandomGraph(3, 1, 1, 2);
+        g = createRandomGraph(13, 0.5, 1, 3);
         List<String> sources = new LinkedList();
         sources.add("v1");
         List<String> sinks = new LinkedList();
@@ -89,17 +86,18 @@ public class GargAndKoenemannMMCFImpTest {
     We notice: the length of the edge with the higher capacity grows much slower than the one with the lower capacity.
     This might lead to a problem: we dont want to have a big ratio of our edge lengths.
     */
-    public void Test1() {
+    public void Test1a() {
         g.addVertex(v1);
         g.addVertex(v2);
         g.addVertex(v3);
         edge = g.addEdge(v1, v2);
-        g.setEdgeWeight(edge, 500);
+        g.setEdgeWeight(edge, 1);
         edge = g.addEdge(v2, v3);
-        g.setEdgeWeight(edge, 5.0);
+        g.setEdgeWeight(edge, 10);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         List<String> sources = new LinkedList();
         sources.add(v1);
+
 
         List<String> sinks = new LinkedList();
         sinks.add(v3);
@@ -130,13 +128,13 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v5);
         g.addVertex(v6);
         edge = g.addEdge(v1, v3);
-        g.setEdgeWeight(edge, 1000000000);
+        g.setEdgeWeight(edge, 10000);
         edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, 1);
         edge = g.addEdge(v3, v4);
-        g.setEdgeWeight(edge, 0.0001);
+        g.setEdgeWeight(edge, 100);
         edge = g.addEdge(v4, v5);
-        g.setEdgeWeight(edge, 1000000000);
+        g.setEdgeWeight(edge, 1000);
         edge = g.addEdge(v4, v6);
         g.setEdgeWeight(edge, 1);
         List<String> sources = new LinkedList();
@@ -146,9 +144,36 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add(v5);
         sinks.add(v6);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
-        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
-        System.out.println(flow);
+        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
 
+
+    }@Test
+    /*Here we test the algorithm on a graph with following edges(and corresponding nodes ofc.): ([1,2],[2,3],[3,4],...),
+     c(e)=1.0 f.a. e in E. Two demands: (1,2), (2,n).
+     We notice: everything works fine.
+     */
+    public void Test1c() {
+        int numberOfEdges = 10000;
+        for (int i = 0; i < numberOfEdges; i++) {
+            g.addVertex("v" + Integer.toString(i));
+        }
+        edge= g.addEdge("v0","v1");
+        g.setEdgeWeight(edge,0.00000001);
+        edge= g.addEdge("v1","v2");
+        g.setEdgeWeight(edge,1000000000);
+
+        for (int i = 2; i < numberOfEdges - 1; i++) {
+            edge = g.addEdge("v" + Integer.toString(i), "v" + Integer.toString(i + 1));
+            g.setEdgeWeight(edge, 1000000000);
+        }
+        List<String> sources = new LinkedList();
+        sources.add("v0");
+
+        List<String> sinks = new LinkedList();
+        sinks.add("v9999");
+
+        gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
+        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
     }
 
     @Test
