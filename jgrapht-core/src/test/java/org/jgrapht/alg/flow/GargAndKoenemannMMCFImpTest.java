@@ -66,7 +66,7 @@ public class GargAndKoenemannMMCFImpTest {
     Here we test the algorithm on a random graph (properties of the random of the graph can be modified)
     */
     public void RandomGraphTest() {
-        g = createRandomGraph(13, 0.5, 1, 3);
+        g = createRandomGraph(3, 1, 1, 3);
         List<String> sources = new LinkedList();
         sources.add("v1");
         List<String> sinks = new LinkedList();
@@ -105,6 +105,7 @@ public class GargAndKoenemannMMCFImpTest {
 
         double flow = 1.0;
         System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
+        System.out.println(gargAndKoenemann.getFlowMapOfDemand(v1,v3));
 
     }
 
