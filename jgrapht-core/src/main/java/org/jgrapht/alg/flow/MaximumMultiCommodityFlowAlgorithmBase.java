@@ -61,7 +61,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     /* needed for the initialization*/
     double lengthOfLongestPath = 0.0;
     /* representation of sources and sinks*/
-    List<Pair<VertexExtensionBase, VertexExtensionBase>> demands = null;
+    List<Demand> demands = null;
 
     /**
      * Construct a new maximum flow
@@ -123,7 +123,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      */
     void buildInternal() {
         if (directedGraph) { // Directed graph
-
 
 
             Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
@@ -210,7 +209,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 //   vx.getOutgoing().add(backwardEdge);
             }
         }
-        System.out.println("test2");
 
     }
 
@@ -320,8 +318,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
             for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
                 Pair<V, V> vDemand = new Pair<V, V>(demand.getFirst().prototype, demand.getSecond().prototype);
                 mapOfFlowsForEachDemand.put(vDemand, new HashMap<>());
-                for (E e :
-                        network.edgeSet()) {
+                for (E e : network.edgeSet()) {
                     mapOfFlowsForEachDemand.get(vDemand).put(e, 0.0);
                 }
             }
@@ -331,6 +328,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
             // Flow of demand
             Pair<V, V> vDemand = new Pair(source, sink);
             mapOfFlowsForEachDemand.get(vDemand).put(e, mapOfFlowsForEachDemand.get(vDemand).get(e) + annotatedFlowEdge.demandFlows.get(new Pair(vertexExtensionManager.getExtension(source), vertexExtensionManager.getExtension(sink))));
+            maxFlow.put(e, annotatedFlowEdge.demandFlows.get(new Pair(vertexExtensionManager.getExtension(source), vertexExtensionManager.getExtension(sink))));
         }
 
         return maxFlow;
@@ -492,6 +490,21 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         else
             return inverseEdge.getTarget().prototype;
     }
+
+
+    public class Demand {
+        VertexExtensionBase source;
+        VertexExtensionBase sink;
+
+        public Demand(VertexExtensionBase source, VertexExtensionBase sink) {
+            this.source = source;
+            this.sink = sink;
+
+        }
+
+
+    }
+
 
 }
 

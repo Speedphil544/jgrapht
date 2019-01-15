@@ -24,7 +24,7 @@ public class GargAndKoenemannMMCFImpTest {
 
     private final String v3 = "v3";
 
-    private final double approximationRate = 0.0001;
+    private final double approximationRate = 0.1;
 
     private double epsilon = 1e-200;
 
@@ -91,9 +91,9 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v2);
         g.addVertex(v3);
         edge = g.addEdge(v1, v2);
-        g.setEdgeWeight(edge, 1);
+        g.setEdgeWeight(edge, 0.1);
         edge = g.addEdge(v2, v3);
-        g.setEdgeWeight(edge, 10);
+        g.setEdgeWeight(edge, 100);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         List<String> sources = new LinkedList();
         sources.add(v1);
