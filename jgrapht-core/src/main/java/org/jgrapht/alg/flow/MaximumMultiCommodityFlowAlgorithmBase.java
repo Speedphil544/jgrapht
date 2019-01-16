@@ -61,6 +61,9 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     double lengthOfLongestPath = 0.0;
     /* representation of sources and sinks*/
     List<Demand> demands = null;
+    // for a demand we migth close some edges
+    Map<Demand, List<E>> allClosedEdgesForADemand = null;
+
 
     /**
      * Construct a new maximum flow
@@ -94,19 +97,23 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      */
     protected <VE extends VertexExtensionBase> void init(double approximationRate,
                                                          List<V> sources, List<V> sinks, ExtensionFactory<VE> vertexExtensionFactory,
-                                                         ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory) {
+                                                         ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory, List<List<E>> allClosedEdgesForADemand
+    ) {
 
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
         demands = new LinkedList();
+        this.allClosedEdgesForADemand = new HashMap();
         for (int i = 0; i < demandSize; i++) {
             VertexExtensionBase source = vertexExtensionManager.getExtension(sources.get(i));
             VertexExtensionBase sink = vertexExtensionManager.getExtension(sinks.get(i));
             source.prototype = sources.get(i);
             sink.prototype = sinks.get(i);
-            demands.add(new Demand(source, sink));
-
+            Demand demand = new Demand(source, sink);
+            demands.add(demand);
+            this.allClosedEdgesForADemand.put(demand, allClosedEdgesForADemand.get(i));
         }
+
         buildInternal();
         maxFlowValue = 0;
         maxFlow = null;

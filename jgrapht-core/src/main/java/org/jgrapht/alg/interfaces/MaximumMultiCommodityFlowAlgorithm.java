@@ -19,7 +19,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      * @param sinks   sink of the flow inside the network
      * @return maximum flow
      */
-    MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double accuracy);
+    MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double accuracy, List<List<E>> allClosedEdgesForADemand);
 
     // for mcf
     Map<E, Double> getFlowMapOfDemand(V source, V sink);
@@ -35,8 +35,8 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      * @param sinks   sink vertex
      * @return the value of the maximum flow
      */
-    default double getMaximumFlowValue(List<V> sources, List<V> sinks, double accuracy) {
-        return getMaximumFlow(sources, sinks, accuracy).getValue();
+    default double getMaximumFlowValue(List<V> sources, List<V> sinks, double accuracy, List<List<E>> isAnEdgeValidForADemand) {
+        return getMaximumFlow(sources, sinks, accuracy, isAnEdgeValidForADemand).getValue();
     }
 
     /**
@@ -92,7 +92,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
 
         @Override
         public String toString() {
-            return "Flow Value: " + value + "\nFlow map:\n" + getFlowMap() +"\n Commodity Flow Maps:" + mapOfFlowForEachDemand + "\n Commodity Flow Values" + values ;
+            return "Flow Value: " + value + "\nFlow map:\n" + getFlowMap() + "\n Commodity Flow Maps:" + mapOfFlowForEachDemand + "\n Commodity Flow Values" + values;
         }
     }
 }

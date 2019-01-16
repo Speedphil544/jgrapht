@@ -81,8 +81,8 @@ public class GargAndKoenemannMMCFImp<V, E>
     }
 
     @Override
-    public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double approximationRate) {
-        this.calculateMaxFlow(sources, sinks, approximationRate);
+    public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double approximationRate, List<List<E>> allClosedEdgesForADemand) {
+        this.calculateMaxFlow(sources, sinks, approximationRate, allClosedEdgesForADemand);
         //maxFlow = composeFlow();
         // for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
         //     composeFlow(demand.getFirst().prototype, demand.getSecond().prototype);
@@ -99,7 +99,7 @@ public class GargAndKoenemannMMCFImp<V, E>
      * @param sinks   sink vertex.
      * @return the value of the maximum flow in the network.
      */
-    private double calculateMaxFlow(List<V> sources, List<V> sinks, double approximationRate) {
+    private double calculateMaxFlow(List<V> sources, List<V> sinks, double approximationRate, List<List<E>> allClosedEdgesForADemand) {
         if (sources == (null)) {
             throw new IllegalArgumentException("Network does not contain sources!");
         }
@@ -130,7 +130,7 @@ public class GargAndKoenemannMMCFImp<V, E>
         this.delta = (1 + accuracy) * Math.pow(lengthOfLongestPath * (1 + accuracy), -1 / accuracy);
         this.delta = 1e-8;
         assert (comparator.compare(delta, 0.0) != 0) : "Delta too small: " + delta;
-        super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory);
+        super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory, allClosedEdgesForADemand);
         for (int i = 0; i < demandSize; i++) {
             currentDemands.add(new Demand(vertexExtensionManager.getExtension(sources.get(i)), vertexExtensionManager.getExtension(sinks.get(i))));
         }
@@ -150,6 +150,16 @@ public class GargAndKoenemannMMCFImp<V, E>
             double shortestPathWeight = Double.POSITIVE_INFINITY;
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
             for (Demand demand : demands) {
+
+                // remove closed edges
+                Map<AnnotatedFlowEdge, Double> saveTheWeightsOfTheEdges = new HashMap<>();
+                for (E e : allClosedEdgesForADemand.get(demand)) {
+                    AnnotatedFlowEdge annotatedFlowEdge = edgeExtensionManager.getExtension(e);
+                    saveTheWeightsOfTheEdges.put(annotatedFlowEdge, networkCopy.getEdgeWeight(annotatedFlowEdge));
+                    networkCopy.setEdgeWeight(annotatedFlowEdge, Double.POSITIVE_INFINITY);
+                }
+
+
                 DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
                 GraphPath newPath = dijkstra.getPath(demand.source, demand.sink);
                 if (newPath != null) {
@@ -161,6 +171,12 @@ public class GargAndKoenemannMMCFImp<V, E>
                         currentDemandFlowIsPushedAlong = demand;
                     }
                 }
+
+                // add edges that were removed
+                for (AnnotatedFlowEdge annotatedFlowEdge : saveTheWeightsOfTheEdges.keySet()) {
+                    networkCopy.setEdgeWeight(annotatedFlowEdge, saveTheWeightsOfTheEdges.get(annotatedFlowEdge));
+                }
+
             }
             if (breakingCriterionsAndEdgeScalingObject.actualizeStats(pathsExist, shortestPath)) {
                 break;
@@ -194,6 +210,7 @@ public class GargAndKoenemannMMCFImp<V, E>
         maxFlow = breakingCriterionsAndEdgeScalingObject.bestmaxFlow;
         mapOfFlowsForEachDemand = breakingCriterionsAndEdgeScalingObject.bestmapOfFlowsForEachDemand;
         maxFlowValueForEachDemand = breakingCriterionsAndEdgeScalingObject.bestMaxFlowValueForEachDemand;
+
         scaleFlow();
 
     }
@@ -204,6 +221,9 @@ public class GargAndKoenemannMMCFImp<V, E>
             if (comparator.compare(maxFlow.get(e) / network.getEdgeWeight(e), mostViolatedEdgeViolation) > 0) {
                 mostViolatedEdgeViolation = maxFlow.get(e) / network.getEdgeWeight(e);
             }
+        }
+        if (comparator.compare(mostViolatedEdgeViolation, 0.0) == 0) {
+            return;
         }
         maxFlowValue /= mostViolatedEdgeViolation;
         for (E e : network.edgeSet()) {
@@ -247,12 +267,20 @@ public class GargAndKoenemannMMCFImp<V, E>
         public Map<Demand, Map<E, Double>> bestmapOfFlowsForEachDemand = new HashMap<>();
 
         public boolean actualizeStats(boolean pathsExist, GraphPath shortestPath) {
-            double shortestPathWeight = shortestPath.getWeight();
+
             // if there are no valid paths, break and set flow = zeroMapping
             if (!pathsExist) {
                 System.out.println("There are no valid paths from a source to its sink");
+                // we have to compose the flow...
+                bestMaxFlowValue = 0;
+                bestmaxFlow = composeFlow();
+                for (Demand demand : demands) {
+                    bestmapOfFlowsForEachDemand.put(demand, composeFlow(demand));
+                    bestMaxFlowValueForEachDemand.put(demand, 0.0);
+                }
                 return true;
             }
+            double shortestPathWeight = shortestPath.getWeight();
             // breaking condition, we stop when shortest path hast length bigger or equal to 1
             double b = Math.pow(lengthOfLongestPath * (1 + accuracy), 1 / accuracy - divisionCounter) / (1 + accuracy);
             if (comparator.compare(shortestPathWeight, delta * b) >= 0) {
@@ -297,7 +325,7 @@ public class GargAndKoenemannMMCFImp<V, E>
             }
             // if the ratio between the best flow and the best length function is small enough, we end the algorithm
             if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFunction, 1 + approximationRate) <= 0) {
-               // System.out.println(1 / shortestPathWeight);
+                // System.out.println(1 / shortestPathWeight);
                 return true;
             }
             return false;
