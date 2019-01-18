@@ -100,8 +100,6 @@ public class GargAndKoenemannMMCFImpTest {
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         List<String> sources = new LinkedList();
         sources.add(v1);
-
-
         List<String> sinks = new LinkedList();
         sinks.add(v3);
         List<List<DefaultWeightedEdge>> closedEdges = new LinkedList<>();
@@ -130,6 +128,7 @@ public class GargAndKoenemannMMCFImpTest {
         String v4 = "v4";
         String v5 = "v5";
         String v6 = "v6";
+        String v7 = "v7";
         g.addVertex(v4);
         g.addVertex(v5);
         g.addVertex(v6);
@@ -143,20 +142,23 @@ public class GargAndKoenemannMMCFImpTest {
         g.setEdgeWeight(edge, 1000);
         edge = g.addEdge(v4, v6);
         g.setEdgeWeight(edge, 1);
+        edge = g.addEdge(v1, v5);
+        g.setEdgeWeight(edge, 1);
         List<String> sources = new LinkedList();
         sources.add(v1);
         sources.add(v2);
+        sources.add(v1);
         List<String> sinks = new LinkedList();
         sinks.add(v5);
+        sinks.add(v6);
         sinks.add(v6);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         List<List<DefaultWeightedEdge>> closedEdges = new LinkedList<>();
         closedEdges.add(new LinkedList());
-
+        closedEdges.add(new LinkedList());
         closedEdges.add(new LinkedList());
         edge = g.getEdge(v3,v4);
         closedEdges.get(0).add(edge);
-        closedEdges.get(1).add(edge);
         System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate, closedEdges));
 
 

@@ -4,7 +4,6 @@ package org.jgrapht.alg.flow;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
-import org.jgrapht.alg.util.Pair;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 
 import java.util.HashMap;
@@ -81,7 +80,7 @@ public class GargAndKoenemannMMCFImp<V, E>
     }
 
     @Override
-    public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double approximationRate, List<List<E>> allClosedEdgesForADemand) {
+    public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double approximationRate, List<Map<E,Double>> allClosedEdgesForADemand) {
         this.calculateMaxFlow(sources, sinks, approximationRate, allClosedEdgesForADemand);
         //maxFlow = composeFlow();
         // for (Pair<VertexExtensionBase, VertexExtensionBase> demand : demands) {
@@ -99,7 +98,7 @@ public class GargAndKoenemannMMCFImp<V, E>
      * @param sinks   sink vertex.
      * @return the value of the maximum flow in the network.
      */
-    private double calculateMaxFlow(List<V> sources, List<V> sinks, double approximationRate, List<List<E>> allClosedEdgesForADemand) {
+    private double calculateMaxFlow(List<V> sources, List<V> sinks, double approximationRate, List<Map<E,Double>> allClosedEdgesForADemand) {
         if (sources == (null)) {
             throw new IllegalArgumentException("Network does not contain sources!");
         }
@@ -133,8 +132,8 @@ public class GargAndKoenemannMMCFImp<V, E>
         super.init(accuracy, sources, sinks, vertexExtensionsFactory, edgeExtensionsFactory, allClosedEdgesForADemand);
         for (int i = 0; i < demandSize; i++) {
             currentDemands.add(new Demand(vertexExtensionManager.getExtension(sources.get(i)), vertexExtensionManager.getExtension(sinks.get(i))));
+            //System.out.println((new Demand(vertexExtensionManager.getExtension((sources.get(i))), vertexExtensionManager.getExtension(sinks.get(i)))).equals(demands.get(i))+"lala");
         }
-
         gargAndKoenemann();
         return maxFlowValue;
     }
@@ -151,15 +150,13 @@ public class GargAndKoenemannMMCFImp<V, E>
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
             for (Demand demand : demands) {
 
-                // remove closed edges
+                // "remove" closed edges
                 Map<AnnotatedFlowEdge, Double> saveTheWeightsOfTheEdges = new HashMap<>();
-                for (E e : allClosedEdgesForADemand.get(demand)) {
+                for (E e : allClosedEdgesForADemand.get(demand).keySet()) {
                     AnnotatedFlowEdge annotatedFlowEdge = edgeExtensionManager.getExtension(e);
                     saveTheWeightsOfTheEdges.put(annotatedFlowEdge, networkCopy.getEdgeWeight(annotatedFlowEdge));
                     networkCopy.setEdgeWeight(annotatedFlowEdge, Double.POSITIVE_INFINITY);
                 }
-
-
                 DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
                 GraphPath newPath = dijkstra.getPath(demand.source, demand.sink);
                 if (newPath != null) {
@@ -176,7 +173,6 @@ public class GargAndKoenemannMMCFImp<V, E>
                 for (AnnotatedFlowEdge annotatedFlowEdge : saveTheWeightsOfTheEdges.keySet()) {
                     networkCopy.setEdgeWeight(annotatedFlowEdge, saveTheWeightsOfTheEdges.get(annotatedFlowEdge));
                 }
-
             }
             if (breakingCriterionsAndEdgeScalingObject.actualizeStats(pathsExist, shortestPath)) {
                 break;
@@ -199,42 +195,13 @@ public class GargAndKoenemannMMCFImp<V, E>
 
             }
             maxFlowValue += smallestCapacity;
-
             maxFlowValueForEachDemand.put(currentDemandFlowIsPushedAlong, maxFlowValueForEachDemand.get(currentDemandFlowIsPushedAlong) + smallestCapacity);
             counter++;
             // System.out.println(counter);
         }
         //scale the flow to make it feasible
-        //scale the flow to make it feasible
-        maxFlowValue = breakingCriterionsAndEdgeScalingObject.bestMaxFlowValue;
-        maxFlow = breakingCriterionsAndEdgeScalingObject.bestmaxFlow;
-        mapOfFlowsForEachDemand = breakingCriterionsAndEdgeScalingObject.bestmapOfFlowsForEachDemand;
-        maxFlowValueForEachDemand = breakingCriterionsAndEdgeScalingObject.bestMaxFlowValueForEachDemand;
+        breakingCriterionsAndEdgeScalingObject.finish();
 
-        scaleFlow();
-
-    }
-
-    private void scaleFlow() {
-        Double mostViolatedEdgeViolation = 0.0;
-        for (E e : maxFlow.keySet()) {
-            if (comparator.compare(maxFlow.get(e) / network.getEdgeWeight(e), mostViolatedEdgeViolation) > 0) {
-                mostViolatedEdgeViolation = maxFlow.get(e) / network.getEdgeWeight(e);
-            }
-        }
-        if (comparator.compare(mostViolatedEdgeViolation, 0.0) == 0) {
-            return;
-        }
-        maxFlowValue /= mostViolatedEdgeViolation;
-        for (E e : network.edgeSet()) {
-            maxFlow.put(e, maxFlow.get(e) / mostViolatedEdgeViolation);
-            for (Demand demand : demands) {
-                mapOfFlowsForEachDemand.get(demand).put(e, mapOfFlowsForEachDemand.get(demand).get(e) / mostViolatedEdgeViolation);
-            }
-        }
-        for (Demand demand : demands) {
-            maxFlowValueForEachDemand.put(demand, maxFlowValueForEachDemand.get(demand) / mostViolatedEdgeViolation);
-        }
     }
 
 
@@ -249,11 +216,13 @@ public class GargAndKoenemannMMCFImp<V, E>
             extends
             VertexExtensionBase {
 
-    }
+        public VertexExtension() {
 
-    // cast an extension pair to a V pair
-    private Pair<V, V> castPrototypePair(Pair<VertexExtensionBase, VertexExtensionBase> pair) {
-        return new Pair(pair.getFirst().prototype, pair.getSecond().prototype);
+            this.isAHelperVertex = false;
+        }
+
+        VertexExtensionBase helperVertex;
+
     }
 
     // handle the breaking conditions, the best primal/dual solutions and the scaling
@@ -261,8 +230,8 @@ public class GargAndKoenemannMMCFImp<V, E>
         double maxPrimalObjectiveFunction = 0.0;
         double minDualObjectiveFunction = Double.POSITIVE_INFINITY;
         double bestMaxFlowValue = 0.0;
-        protected Map<Demand, Double> bestMaxFlowValueForEachDemand = new HashMap<>();
         int divisionCounter = 0;
+        protected Map<Demand, Double> bestMaxFlowValueForEachDemand = new HashMap<>();
         Map<E, Double> bestmaxFlow = null;
         public Map<Demand, Map<E, Double>> bestmapOfFlowsForEachDemand = new HashMap<>();
 
@@ -329,6 +298,34 @@ public class GargAndKoenemannMMCFImp<V, E>
                 return true;
             }
             return false;
+        }
+
+        public void finish() {
+
+            maxFlowValue = this.bestMaxFlowValue;
+            maxFlow = this.bestmaxFlow;
+            mapOfFlowsForEachDemand = this.bestmapOfFlowsForEachDemand;
+            maxFlowValueForEachDemand = this.bestMaxFlowValueForEachDemand;
+            Double mostViolatedEdgeViolation = 0.0;
+            for (E e : maxFlow.keySet()) {
+                if (comparator.compare(maxFlow.get(e) / network.getEdgeWeight(e), mostViolatedEdgeViolation) > 0) {
+                    mostViolatedEdgeViolation = maxFlow.get(e) / network.getEdgeWeight(e);
+                }
+            }
+            if (comparator.compare(mostViolatedEdgeViolation, 0.0) == 0) {
+                return;
+            }
+            maxFlowValue /= mostViolatedEdgeViolation;
+            for (E e : network.edgeSet()) {
+                maxFlow.put(e, maxFlow.get(e) / mostViolatedEdgeViolation);
+                for (Demand demand : demands) {
+                    mapOfFlowsForEachDemand.get(demand).put(e, mapOfFlowsForEachDemand.get(demand).get(e) / mostViolatedEdgeViolation);
+                }
+            }
+            for (Demand demand : demands) {
+                maxFlowValueForEachDemand.put(demand, maxFlowValueForEachDemand.get(demand) / mostViolatedEdgeViolation);
+            }
+
         }
     }
 
