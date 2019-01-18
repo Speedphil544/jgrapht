@@ -1,12 +1,14 @@
 package org.jgrapht.alg.flow;
 
 import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.MaximumMultiCommodityFlowAlgorithm;
+import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.alg.util.extension.Extension;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 import org.jgrapht.alg.util.extension.ExtensionManager;
-import org.jgrapht.graph.DirectedWeightedMultigraph;
+import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -48,7 +50,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     /* List of mappings for each demand, */
     public Map<Demand, Map<E, Double>> mapOfFlowsForEachDemand = null;
     /* A copy of the network, that uses a length function as weights, needed for dijkstraShortestPath*/
-    public DirectedWeightedMultigraph<VertexExtensionBase, AnnotatedFlowEdge> networkCopy;
+    public Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopy;
     /* the weight that the copied edges are initialized with*/
     protected double delta = 0;
     /* accuracy depending on the wanted approximation rate*/
@@ -59,9 +61,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     double lengthOfLongestPath = 0.0;
     /* representation of sources and sinks*/
     List<Demand> demands = null;
-    // for a demand we migth close some edges
-    Map<Demand, Map<E, Double>> allClosedEdgesForADemand = null;
-
 
     /**
      * Construct a new maximum flow
@@ -77,7 +76,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         // network copy
         Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
         Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
-        this.networkCopy = new DirectedWeightedMultigraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
+        this.networkCopy = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
         lengthOfLongestPath = network.vertexSet().size();
 
 
@@ -95,23 +94,19 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      */
     protected <VE extends VertexExtensionBase> void init(double approximationRate,
                                                          List<V> sources, List<V> sinks, ExtensionFactory<VE> vertexExtensionFactory,
-                                                         ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory, List<Map<E, Double>> allClosedEdgesForADemand
-    ) {
+                                                         ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory) {
 
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
         demands = new LinkedList();
-        this.allClosedEdgesForADemand = new HashMap();
         for (int i = 0; i < demandSize; i++) {
             VertexExtensionBase source = vertexExtensionManager.getExtension(sources.get(i));
             VertexExtensionBase sink = vertexExtensionManager.getExtension(sinks.get(i));
             source.prototype = sources.get(i);
             sink.prototype = sinks.get(i);
-            Demand demand = new Demand(source, sink);
-            demands.add(demand);
-            this.allClosedEdgesForADemand.put(demand, allClosedEdgesForADemand.get(i));
-        }
+            demands.add(new Demand(source, sink));
 
+        }
         buildInternal();
         maxFlowValue = 0;
         maxFlow = null;
@@ -131,55 +126,69 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
             Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
             Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
+            Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopyPrototype = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
             // add vertices to networkCopy
-
-
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 vx.prototype = v;
                 networkCopy.addVertex(vx);
-
-                // add a helperVertex , not sure if this is "legal"
-
-                // String hv = vx.toString() + "helperVertex";
-                VertexExtensionBase hvx = new VertexExtensionBase();
-                hvx.prototype = v;
-
-
-                vx.helperVertex = hvx;
-
-                networkCopy.addVertex(hvx);
-
-
+                networkCopyPrototype.addVertex(vx);
             }
 
             // add edges to network copy
             for (E e : network.edgeSet()) {
-                V u = network.getEdgeSource(e);
+                V u = network.getEdgeTarget(e);
                 VertexExtensionBase ux = vertexExtensionManager.getExtension(u);
-
-                VertexExtensionBase hux = ux.helperVertex;
-                AnnotatedFlowEdge edgeWithTotalCapacity = createEdge(ux, hux, e, network.getEdgeWeight(e));
-
+                V v = network.getEdgeSource(e);
+                VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
+                AnnotatedFlowEdge edgeCopy = createEdge(vx, ux, e, network.getEdgeWeight(e));
 
                 // only use edges with capacity that is not zero
-                if (comparator.compare(edgeWithTotalCapacity.capacity, 0.0) > 0) {
-                    networkCopy.addEdge(ux, hux, edgeWithTotalCapacity);
-                    networkCopy.setEdgeWeight(edgeWithTotalCapacity, delta);
-
+                if (comparator.compare(edgeCopy.capacity, 0.0) > 0) {
+                    networkCopyPrototype.addEdge(vx, ux, edgeCopy);
+                    networkCopyPrototype.setEdgeWeight(vx, ux, delta);
                 }
+            }
 
-                V v = network.getEdgeTarget(e);
-                VertexExtensionBase vx = vertexExtensionManager.getExtension(v)
-
-                for (Demand demand : demands) {
-                    //edge prototype null ?!
-                    AnnotatedFlowEdge edgeWithSingleDemandCapacity = createEdge(hux, vx, null, allClosedEdgesForADemand.get(demand).get(e));
-                    networkCopy.addEdge(hux, vx, edgeWithSingleDemandCapacity);
-                    networkCopy.setEdgeWeight(edgeWithSingleDemandCapacity,);
+            // next, we want to get rid of all edges that are not needed for the computation: those who are not contained
+            // in any relevant demand path
+            // it seems a little bit strange to add all edges first and then remove some of them again, but before computing
+            //all paths we must get rid of the edges with zero capacity because otherwise they would be included.
+            AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(networkCopyPrototype);
+            LinkedList<GraphPath> allDirectedPathsOfAllDemands = new LinkedList<>();
+            List<AnnotatedFlowEdge> relevantEdgesInNetworkCopy = new LinkedList<>();
+            for (Demand demand : demands) {
+                for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPaths.getAllPaths(demand.source, demand.sink, true, null)) {
+                    allDirectedPathsOfAllDemands.add(path);
                 }
-
-
+            }
+            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> currentpath : allDirectedPathsOfAllDemands) {
+                List currentEdgeList = currentpath.getEdgeList();
+                for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
+                    if (currentpath != path) {
+                        boolean pathIsASubPathOfCurrentPath = true;
+                        List<AnnotatedFlowEdge> edgeList = path.getEdgeList();
+                        for (AnnotatedFlowEdge edge : edgeList) {
+                            if (!currentEdgeList.contains(edge)) {
+                                pathIsASubPathOfCurrentPath = false;
+                                break;
+                            }
+                        }
+                        if (pathIsASubPathOfCurrentPath) {
+                            allDirectedPathsOfAllDemands.remove(currentpath);
+                            break;
+                        }
+                    }
+                }
+            }
+            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
+                for (AnnotatedFlowEdge e : path.getEdgeList()) {
+                    relevantEdgesInNetworkCopy.add(e);
+                }
+            }
+            for (AnnotatedFlowEdge edge : relevantEdgesInNetworkCopy) {
+                networkCopy.addEdge(edge.source, edge.target, edge);
+                networkCopy.setEdgeWeight(edge, delta);
             }
 
 
@@ -326,33 +335,17 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     class VertexExtensionBase
             implements
             Extension {
-        // written by me...
-        // VertexExtensionBase() {
-        //}
 
-        boolean isAHelperVertex = true;
-
-
-        VertexExtensionBase() {
-
-
-        }
 
         //private final List<AnnotatedFlowEdge> outgoing = new ArrayList<>();
-        // String fakePrototype;
+
         V prototype;
-        VertexExtensionBase helperVertex;
+
 
         // to String override
 
         public String toString() {
-
-            // written by me
-            // if (this.prototype == null) {
-            //  return this.fakePrototype;
-            //} else {
-            return this.prototype.toString() + ", is fake:" + isAHelperVertex;
-            //}
+            return this.prototype.toString();
         }
 
 
