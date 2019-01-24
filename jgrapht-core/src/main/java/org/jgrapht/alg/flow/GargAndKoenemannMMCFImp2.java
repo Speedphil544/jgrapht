@@ -17,7 +17,7 @@ import java.util.Map;
  * @author
  */
 
-public class GargAndKoenemannMMCFImp<V, E>
+public class GargAndKoenemannMMCFImp2<V, E>
         extends
         MaximumMultiCommodityFlowAlgorithmBase<V, E> {
 
@@ -33,7 +33,7 @@ public class GargAndKoenemannMMCFImp<V, E>
      * @param network the network on which we calculate the maximum flow.
      * @param epsilon the tolerance for the comparison of floating point values.
      */
-    public GargAndKoenemannMMCFImp(Graph<V, E> network, double epsilon) {
+    public GargAndKoenemannMMCFImp2(Graph<V, E> network, double epsilon) {
         super(network, epsilon);
         this.vertexExtensionsFactory = VertexExtension::new;
         this.edgeExtensionsFactory = AnnotatedFlowEdge::new;
@@ -53,7 +53,7 @@ public class GargAndKoenemannMMCFImp<V, E>
      *
      * @param network the network on which we calculate the maximum flow.
      */
-    public GargAndKoenemannMMCFImp(Graph<V, E> network) {
+    public GargAndKoenemannMMCFImp2(Graph<V, E> network) {
         this(network, DEFAULT_EPSILON);
     }
 
@@ -115,21 +115,11 @@ public class GargAndKoenemannMMCFImp<V, E>
         BreakingCriterionsAndEdgeScalingObject breakingCriterionsAndEdgeScalingObject = new BreakingCriterionsAndEdgeScalingObject();
         while (true) {
 
-
-            // add helperEdges, what to do with 1lement groups?
-            //for (VertexExtensionBase fakeSource : groupedDemands.keySet()) {
-             //   for (VertexExtensionBase realSource : groupedDemands.get(fakeSource)) {
-              //      networkCopy.addEdge(fakeSource,realSource);
-               //     networkCopy.setEdgeWeight(fakeSource, realSource, 0);
-                //}
-           // }
-
-
             //choose shortest path, its value, its demand
             boolean pathsExist = false;
             double shortestPathWeight = Double.POSITIVE_INFINITY;
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
-            /*for (Demand demand : demands) {
+          for (Demand demand : demands) {
                 DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
                 GraphPath newPath = dijkstra.getPath(demand.source, demand.sink);
                 if (newPath != null) {
@@ -141,43 +131,7 @@ public class GargAndKoenemannMMCFImp<V, E>
                         currentDemandFlowIsPushedAlong = demand;
                     }
                 }
-            }*/
-
-            System.out.println(networkCopy.vertexSet());
-            System.out.println(bliblablub);
-            for (Demand demand : bliblablub) {
-                DijkstraShortestPath dijkstra = new DijkstraShortestPath(networkCopy);
-                for(AnnotatedFlowEdge e: networkCopy.edgeSet()){
-                    System.out.println(networkCopy.getEdgeSource(e)+" "+networkCopy.getEdgeTarget(e));
-                }
-                GraphPath newPath = dijkstra.getPath(demand.source, demand.sink);
-
-                if (newPath != null) {
-                    double newPathWeight = newPath.getWeight();
-                    if (comparator.compare(newPathWeight, shortestPathWeight) < 0) {
-                        pathsExist = true;
-                        shortestPathWeight = newPathWeight;
-                        shortestPath = newPath;
-                        // hmmm
-                        System.out.println(shortestPath.getEdgeList().get(0).));
-                        System.out.println(new Demand(shortestPath.getEdgeList().get(0).getTarget(),demand.sink));
-                        System.out.println(currentDemandFlowIsPushedAlong);
-                    }
-                }
             }
-
-
-            // remove helperEdges
-            //for (VertexExtensionBase fakeSource : groupedDemands.keySet()) {
-             //   for (VertexExtensionBase realSource : groupedDemands.get(fakeSource)) {
-              //      networkCopy.removeEdge(fakeSource, realSource);
-               // }
-           // }
-
-            shortestPath.getEdgeList().remove(0);
-
-            System.out.println(currentDemandFlowIsPushedAlong+"lala");
-for(AnnotatedFlowEdge e : shortestPath.getEdgeList()){System.out.println(e.demandFlows);}
 
             if (breakingCriterionsAndEdgeScalingObject.actualizeStats(pathsExist, shortestPath)) {
                 break;
@@ -192,7 +146,6 @@ for(AnnotatedFlowEdge e : shortestPath.getEdgeList()){System.out.println(e.deman
             }
             //update length and flow(value) (also for each demand)
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
-                System.out.println(e);
                 networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + networkCopy.getEdgeWeight(e) * accuracy * (smallestCapacity / e.capacity));
                 e.flow = e.flow + smallestCapacity;
                 //demandFlowMap

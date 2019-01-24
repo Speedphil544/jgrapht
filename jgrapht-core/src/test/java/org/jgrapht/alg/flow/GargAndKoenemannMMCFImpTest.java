@@ -1,13 +1,17 @@
 package org.jgrapht.alg.flow;
 
 import org.jgrapht.alg.interfaces.MaximumMultiCommodityFlowAlgorithm;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
 public class GargAndKoenemannMMCFImpTest {
 
@@ -93,19 +97,26 @@ public class GargAndKoenemannMMCFImpTest {
         edge = g.addEdge(v1, v2);
         g.setEdgeWeight(edge, 0.1);
         edge = g.addEdge(v2, v3);
-        g.setEdgeWeight(edge, 100);
+        g.setEdgeWeight(edge, 1);
+        edge = g.addEdge(v1, v3);
+        g.setEdgeWeight(edge, 1);
+
+
+
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         List<String> sources = new LinkedList();
         sources.add(v1);
+        sources.add(v2);
 
 
         List<String> sinks = new LinkedList();
+        sinks.add(v3);
         sinks.add(v3);
 
 
         double flow = 1.0;
         System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
-        System.out.println(gargAndKoenemann.getFlowMapOfDemand(v1,v3));
+        System.out.println(gargAndKoenemann.getFlowMapOfDemand(v1, v3));
 
     }
 
@@ -148,7 +159,9 @@ public class GargAndKoenemannMMCFImpTest {
         System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
 
 
-    }@Test
+    }
+
+    @Test
     /*Here we test the algorithm on a graph with following edges(and corresponding nodes ofc.): ([1,2],[2,3],[3,4],...),
      c(e)=1.0 f.a. e in E. Two demands: (1,2), (2,n).
      We notice: everything works fine.
@@ -158,10 +171,10 @@ public class GargAndKoenemannMMCFImpTest {
         for (int i = 0; i < numberOfEdges; i++) {
             g.addVertex("v" + Integer.toString(i));
         }
-        edge= g.addEdge("v0","v1");
-        g.setEdgeWeight(edge,0.00000001);
-        edge= g.addEdge("v1","v2");
-        g.setEdgeWeight(edge,1000000000);
+        edge = g.addEdge("v0", "v1");
+        g.setEdgeWeight(edge, 0.00000001);
+        edge = g.addEdge("v1", "v2");
+        g.setEdgeWeight(edge, 1000000000);
 
         for (int i = 2; i < numberOfEdges - 1; i++) {
             edge = g.addEdge("v" + Integer.toString(i), "v" + Integer.toString(i + 1));

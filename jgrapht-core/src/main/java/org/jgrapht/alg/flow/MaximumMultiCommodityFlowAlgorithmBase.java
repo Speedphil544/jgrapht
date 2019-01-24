@@ -1,9 +1,7 @@
 package org.jgrapht.alg.flow;
 
 import org.jgrapht.Graph;
-import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.MaximumMultiCommodityFlowAlgorithm;
-import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.alg.util.extension.Extension;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
@@ -12,6 +10,8 @@ import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 
 import java.util.*;
 import java.util.function.Supplier;
+
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  * Base class backing algorithms allowing to derive
@@ -62,6 +62,11 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     /* representation of sources and sinks*/
     List<Demand> demands = null;
 
+    // group commodities with shared sink
+    Map<VertexExtensionBase, List<VertexExtensionBase>> groupedDemands = null;
+
+    List<Demand> bliblablub = null;
+
     /**
      * Construct a new maximum flow
      *
@@ -98,7 +103,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
-        demands = new LinkedList();
+        demands = new ArrayList<>();
         for (int i = 0; i < demandSize; i++) {
             VertexExtensionBase source = vertexExtensionManager.getExtension(sources.get(i));
             VertexExtensionBase sink = vertexExtensionManager.getExtension(sinks.get(i));
@@ -107,6 +112,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
             demands.add(new Demand(source, sink));
 
         }
+
         buildInternal();
         maxFlowValue = 0;
         maxFlow = null;
@@ -115,6 +121,8 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         for (Demand demand : demands) {
             maxFlowValueForEachDemand.put(demand, 0.0);
         }
+
+
     }
 
     /**
@@ -132,7 +140,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 vx.prototype = v;
                 networkCopy.addVertex(vx);
-                networkCopyPrototype.addVertex(vx);
             }
 
             // add edges to network copy
@@ -141,54 +148,55 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 VertexExtensionBase ux = vertexExtensionManager.getExtension(u);
                 V v = network.getEdgeSource(e);
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
-                AnnotatedFlowEdge edgeCopy = createEdge(vx, ux, e, network.getEdgeWeight(e));
+                AnnotatedFlowEdge annotatedFlowEdge = createEdge(vx, ux, e, network.getEdgeWeight(e));
 
                 // only use edges with capacity that is not zero
-                if (comparator.compare(edgeCopy.capacity, 0.0) > 0) {
-                    networkCopyPrototype.addEdge(vx, ux, edgeCopy);
-                    networkCopyPrototype.setEdgeWeight(vx, ux, delta);
+                if (comparator.compare(annotatedFlowEdge.capacity, 0.0) > 0) {
+                    networkCopy.addEdge(vx, ux, annotatedFlowEdge);
+                    networkCopy.setEdgeWeight(vx, ux, delta);
                 }
             }
 
-            // next, we want to get rid of all edges that are not needed for the computation: those who are not contained
-            // in any relevant demand path
-            // it seems a little bit strange to add all edges first and then remove some of them again, but before computing
-            //all paths we must get rid of the edges with zero capacity because otherwise they would be included.
-            AllDirectedPaths<VertexExtensionBase, AnnotatedFlowEdge> allDirectedPaths = new AllDirectedPaths(networkCopyPrototype);
-            LinkedList<GraphPath> allDirectedPathsOfAllDemands = new LinkedList<>();
-            List<AnnotatedFlowEdge> relevantEdgesInNetworkCopy = new LinkedList<>();
-            for (Demand demand : demands) {
-                for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPaths.getAllPaths(demand.source, demand.sink, true, null)) {
-                    allDirectedPathsOfAllDemands.add(path);
-                }
-            }
-            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> currentpath : allDirectedPathsOfAllDemands) {
-                List currentEdgeList = currentpath.getEdgeList();
-                for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
-                    if (currentpath != path) {
-                        boolean pathIsASubPathOfCurrentPath = true;
-                        List<AnnotatedFlowEdge> edgeList = path.getEdgeList();
-                        for (AnnotatedFlowEdge edge : edgeList) {
-                            if (!currentEdgeList.contains(edge)) {
-                                pathIsASubPathOfCurrentPath = false;
-                                break;
-                            }
-                        }
-                        if (pathIsASubPathOfCurrentPath) {
-                            allDirectedPathsOfAllDemands.remove(currentpath);
-                            break;
-                        }
+            Map<VertexExtensionBase, List<Demand>> intermediate = demands.stream().collect(groupingBy(demand -> demand.sink));
+            groupedDemands= new HashMap<>();
+
+            //group demands
+            bliblablub = new LinkedList();
+            for (VertexExtensionBase sink : intermediate.keySet()) {
+
+                if (intermediate.get(sink).size() > 1) {
+                    VertexExtensionBase demandVertex = new VertexExtensionBase();
+                    // hmmm
+                    demandVertex.prototype = intermediate.get(sink).get(0).sink.prototype;
+                    networkCopy.addVertex(demandVertex);
+
+
+                    bliblablub.add(new Demand(demandVertex, intermediate.get(sink).get(0).sink));
+
+                    groupedDemands.put(demandVertex, new LinkedList());
+                    for (Demand demand : intermediate.get(sink)) {
+                        VertexExtensionBase source = demand.source;
+                        groupedDemands.get(demandVertex).add(source);
                     }
+                    // ignore them for scaling, null?!
+                    // AnnotatedFlowEdge annotatedFlowEdge = createEdge(demandVertex, demand.source, null, Double.POSITIVE_INFINITY);
+
+                    //                        networkCopy.addEdge(demandVertex, demand.source);
+
+                    //edgeWeight delta or zero?
+                    //                      networkCopy.setEdgeWeight(demandVertex, demand.source, 0 );
+
+
                 }
+
+
             }
-            for (GraphPath<VertexExtensionBase, AnnotatedFlowEdge> path : allDirectedPathsOfAllDemands) {
-                for (AnnotatedFlowEdge e : path.getEdgeList()) {
-                    relevantEdgesInNetworkCopy.add(e);
+            // add helperEdges, what to do with 1lement groups?
+            for (VertexExtensionBase fakeSource : groupedDemands.keySet()) {
+                for (VertexExtensionBase realSource : groupedDemands.get(fakeSource)) {
+                    networkCopy.addEdge(fakeSource,realSource);
+                    networkCopy.setEdgeWeight(fakeSource, realSource, 0);
                 }
-            }
-            for (AnnotatedFlowEdge edge : relevantEdgesInNetworkCopy) {
-                networkCopy.addEdge(edge.source, edge.target, edge);
-                networkCopy.setEdgeWeight(edge, delta);
             }
 
 
@@ -219,7 +227,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         ex.target = target;
         ex.capacity = weight;
         ex.prototype = e;
-
         // FlowMap
         ex.demandFlows = new HashMap();
         for (Demand demand : demands) {
@@ -229,6 +236,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
         return ex;
     }
+
 /*
     private AnnotatedFlowEdge createBackwardEdge(AnnotatedFlowEdge forwardEdge) {
         AnnotatedFlowEdge backwardEdge;
@@ -310,6 +318,8 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         return maxFlow;
     }
 
+
+    /* composes a flow for a given demand */
     protected Map<E, Double> composeFlow(Demand demand) {
         Map<E, Double> maxFlow = new HashMap<>();
       /*  if (mapOfFlowsForEachDemand == null) {
