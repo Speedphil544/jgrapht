@@ -5,6 +5,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
+import org.jgrapht.graph.AbstractBaseGraph;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +34,7 @@ public class GargAndKoenemannMMCFImp2<V, E>
      * @param network the network on which we calculate the maximum flow.
      * @param epsilon the tolerance for the comparison of floating point values.
      */
-    public GargAndKoenemannMMCFImp2(Graph<V, E> network, double epsilon) {
+    public GargAndKoenemannMMCFImp2(AbstractBaseGraph<V, E> network, double epsilon) {
         super(network, epsilon);
         this.vertexExtensionsFactory = VertexExtension::new;
         this.edgeExtensionsFactory = AnnotatedFlowEdge::new;
@@ -53,7 +54,7 @@ public class GargAndKoenemannMMCFImp2<V, E>
      *
      * @param network the network on which we calculate the maximum flow.
      */
-    public GargAndKoenemannMMCFImp2(Graph<V, E> network) {
+    public GargAndKoenemannMMCFImp2(AbstractBaseGraph<V, E> network) {
         this(network, DEFAULT_EPSILON);
     }
 

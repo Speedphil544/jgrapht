@@ -6,12 +6,11 @@ import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.alg.util.extension.Extension;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 import org.jgrapht.alg.util.extension.ExtensionManager;
+import org.jgrapht.graph.AbstractBaseGraph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 
 import java.util.*;
 import java.util.function.Supplier;
-
-import static java.util.stream.Collectors.groupingBy;
 
 /**
  * Base class backing algorithms allowing to derive
@@ -32,7 +31,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     public static final double DEFAULT_EPSILON = 1e-9;
 
     /* input network */
-    protected Graph<V, E> network;
+    protected AbstractBaseGraph<V, E> network;
     /* indicates whether the input graph is directed or not */
     protected final boolean directedGraph;
     /* Used to compare floating point values */
@@ -73,7 +72,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      * @param network the network
      * @param epsilon the tolerance for the comparison of floating point values
      */
-    public MaximumMultiCommodityFlowAlgorithmBase(Graph<V, E> network, double epsilon) {
+    public MaximumMultiCommodityFlowAlgorithmBase(AbstractBaseGraph<V, E> network, double epsilon) {
 
         this.network = network;
         this.directedGraph = network.getType().isDirected();
@@ -132,9 +131,13 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         if (directedGraph) { // Directed graph
 
 
+           // Graph firstCopy = (Graph) this.network.clone();
+            //firstCopy.addVertex();
+            //System.out.println(firstCopy.getVertexSupplier() + "lala");
+
             Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
             Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
-            Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopyPrototype = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
+           // Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopyPrototype = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
             // add vertices to networkCopy
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
@@ -157,8 +160,12 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 }
             }
 
+
+
+            /*
+
             Map<VertexExtensionBase, List<Demand>> intermediate = demands.stream().collect(groupingBy(demand -> demand.sink));
-            groupedDemands= new HashMap<>();
+            groupedDemands = new HashMap<>();
 
             //group demands
             bliblablub = new LinkedList();
@@ -194,12 +201,12 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
             // add helperEdges, what to do with 1lement groups?
             for (VertexExtensionBase fakeSource : groupedDemands.keySet()) {
                 for (VertexExtensionBase realSource : groupedDemands.get(fakeSource)) {
-                    networkCopy.addEdge(fakeSource,realSource);
+                    networkCopy.addEdge(fakeSource, realSource);
                     networkCopy.setEdgeWeight(fakeSource, realSource, 0);
                 }
             }
 
-
+*/
         } else { // Undirected graph
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);

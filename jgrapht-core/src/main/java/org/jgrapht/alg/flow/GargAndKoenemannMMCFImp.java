@@ -5,6 +5,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
+import org.jgrapht.graph.AbstractBaseGraph;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +34,7 @@ public class GargAndKoenemannMMCFImp<V, E>
      * @param network the network on which we calculate the maximum flow.
      * @param epsilon the tolerance for the comparison of floating point values.
      */
-    public GargAndKoenemannMMCFImp(Graph<V, E> network, double epsilon) {
+    public GargAndKoenemannMMCFImp(AbstractBaseGraph<V, E> network, double epsilon) {
         super(network, epsilon);
         this.vertexExtensionsFactory = VertexExtension::new;
         this.edgeExtensionsFactory = AnnotatedFlowEdge::new;
@@ -53,7 +54,7 @@ public class GargAndKoenemannMMCFImp<V, E>
      *
      * @param network the network on which we calculate the maximum flow.
      */
-    public GargAndKoenemannMMCFImp(Graph<V, E> network) {
+    public GargAndKoenemannMMCFImp(AbstractBaseGraph<V, E> network) {
         this(network, DEFAULT_EPSILON);
     }
 
@@ -159,7 +160,7 @@ public class GargAndKoenemannMMCFImp<V, E>
                         shortestPathWeight = newPathWeight;
                         shortestPath = newPath;
                         // hmmm
-                        System.out.println(shortestPath.getEdgeList().get(0).));
+
                         System.out.println(new Demand(shortestPath.getEdgeList().get(0).getTarget(),demand.sink));
                         System.out.println(currentDemandFlowIsPushedAlong);
                     }
