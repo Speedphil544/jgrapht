@@ -6,7 +6,6 @@ import org.jgrapht.alg.util.ToleranceDoubleComparator;
 import org.jgrapht.alg.util.extension.Extension;
 import org.jgrapht.alg.util.extension.ExtensionFactory;
 import org.jgrapht.alg.util.extension.ExtensionManager;
-import org.jgrapht.graph.AbstractBaseGraph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 
 import java.util.*;
@@ -31,7 +30,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     public static final double DEFAULT_EPSILON = 1e-9;
 
     /* input network */
-    protected AbstractBaseGraph<V, E> network;
+    protected Graph<V, E> network;
     /* indicates whether the input graph is directed or not */
     protected final boolean directedGraph;
     /* Used to compare floating point values */
@@ -61,10 +60,8 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     /* representation of sources and sinks*/
     List<Demand> demands = null;
 
-    // group commodities with shared sink
-    Map<VertexExtensionBase, List<VertexExtensionBase>> groupedDemands = null;
-
-    List<Demand> bliblablub = null;
+    /*Map for networkCopy for each demand*/
+    Map<Demand, Graph> networkCopyForEachDemand = null;
 
     /**
      * Construct a new maximum flow
@@ -72,7 +69,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      * @param network the network
      * @param epsilon the tolerance for the comparison of floating point values
      */
-    public MaximumMultiCommodityFlowAlgorithmBase(AbstractBaseGraph<V, E> network, double epsilon) {
+    public MaximumMultiCommodityFlowAlgorithmBase(Graph<V, E> network, double epsilon) {
 
         this.network = network;
         this.directedGraph = network.getType().isDirected();
@@ -130,15 +127,21 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     void buildInternal() {
         if (directedGraph) { // Directed graph
 
+            /* In order to reduce the runtime we would group commodities which use the same sink:
+            Suppose we have k demands with the same sink. We add another vertex (fakesource) for each demand in this group
+            and add an edge from the the fake source to each source. Instead of computing djikstra k times (for every demand)
+            we compute dijkstra only once: from fakesource o sink.
+            Difficult to inmplement. */
 
-           // Graph firstCopy = (Graph) this.network.clone();
-            //firstCopy.addVertex();
-            //System.out.println(firstCopy.getVertexSupplier() + "lala");
+            networkCopyForEachDemand = new HashMap<>();
+
+
+
+
+
 
             Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
             Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
-           // Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopyPrototype = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
-            // add vertices to networkCopy
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 vx.prototype = v;
@@ -160,53 +163,6 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 }
             }
 
-
-
-            /*
-
-            Map<VertexExtensionBase, List<Demand>> intermediate = demands.stream().collect(groupingBy(demand -> demand.sink));
-            groupedDemands = new HashMap<>();
-
-            //group demands
-            bliblablub = new LinkedList();
-            for (VertexExtensionBase sink : intermediate.keySet()) {
-
-                if (intermediate.get(sink).size() > 1) {
-                    VertexExtensionBase demandVertex = new VertexExtensionBase();
-                    // hmmm
-                    demandVertex.prototype = intermediate.get(sink).get(0).sink.prototype;
-                    networkCopy.addVertex(demandVertex);
-
-
-                    bliblablub.add(new Demand(demandVertex, intermediate.get(sink).get(0).sink));
-
-                    groupedDemands.put(demandVertex, new LinkedList());
-                    for (Demand demand : intermediate.get(sink)) {
-                        VertexExtensionBase source = demand.source;
-                        groupedDemands.get(demandVertex).add(source);
-                    }
-                    // ignore them for scaling, null?!
-                    // AnnotatedFlowEdge annotatedFlowEdge = createEdge(demandVertex, demand.source, null, Double.POSITIVE_INFINITY);
-
-                    //                        networkCopy.addEdge(demandVertex, demand.source);
-
-                    //edgeWeight delta or zero?
-                    //                      networkCopy.setEdgeWeight(demandVertex, demand.source, 0 );
-
-
-                }
-
-
-            }
-            // add helperEdges, what to do with 1lement groups?
-            for (VertexExtensionBase fakeSource : groupedDemands.keySet()) {
-                for (VertexExtensionBase realSource : groupedDemands.get(fakeSource)) {
-                    networkCopy.addEdge(fakeSource, realSource);
-                    networkCopy.setEdgeWeight(fakeSource, realSource, 0);
-                }
-            }
-
-*/
         } else { // Undirected graph
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
