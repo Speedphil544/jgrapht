@@ -164,17 +164,18 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                     AnnotatedFlowEdge annotatedFlowEdge = createEdge(vx, ux, e, network.getEdgeWeight(e));
 
                     // only use edges with capacity that is not zero
-                    if (comparator.compare(annotatedFlowEdge.capacity, 0.0) > 0) {
+                    if (comparator.compare(annotatedFlowEdge.capacity, 0.0) > 0 && !allClosedEdgesForADemand.get(demand).contains(e)) {
                         currentNetwork.addEdge(vx, ux, annotatedFlowEdge);
                         currentNetwork.setEdgeWeight(vx, ux, delta);
                     }
 
                 }
+
                 networkCopyForEachDemand.put(demand, currentNetwork);
-            }
+                            }
 
 
-            /*
+
             Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
             Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
             for (V v : network.vertexSet()) {
@@ -197,7 +198,8 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                     networkCopy.setEdgeWeight(vx, ux, delta);
                 }
             }
-*/
+
+
         } else { // Undirected graph
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);

@@ -105,14 +105,15 @@ public class GargAndKoenemannMMCFImpTest {
         System.out.println(g);
         edge = g.addEdge(v1, v2);
         g.setEdgeWeight(edge, 0.1);
-        edge = g.addEdge(v2, v3);
-        g.setEdgeWeight(edge, 1);
         edge = g.addEdge(v1, v3);
+        g.setEdgeWeight(edge, 0.1);
+        edge = g.addEdge(v2, v3);
         g.setEdgeWeight(edge, 1);
         List<List<DefaultWeightedEdge>> closedEdges = new LinkedList<>();
         closedEdges.add(new LinkedList());
         closedEdges.add(new LinkedList());
         closedEdges.add(new LinkedList());
+        closedEdges.get(1).add(edge);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         List<String> sources = new LinkedList();
         sources.add(v1);

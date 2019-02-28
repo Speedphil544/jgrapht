@@ -119,7 +119,7 @@ public class GargAndKoenemannMMCFImp<V, E>
         int counter = 1;
         BreakingCriterionsAndEdgeScalingObject breakingCriterionsAndEdgeScalingObject = new BreakingCriterionsAndEdgeScalingObject();
         while (true) {
-            System.out.println(counter);
+
             //choose shortest path, its value, its demand
             boolean pathsExist = false;
             double shortestPathWeight = Double.POSITIVE_INFINITY;
@@ -152,11 +152,15 @@ public class GargAndKoenemannMMCFImp<V, E>
                 }
             }
             //update length and flow(value) (also for each demand)
-            System.out.println("test"+currentDemandFlowIsPushedAlong);
+
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
                 for (Graph<VertexExtensionBase, AnnotatedFlowEdge> currentGraph : networkCopyForEachDemand.values()) {
-                    currentGraph.setEdgeWeight(e, currentGraph.getEdgeWeight(e) + currentGraph.getEdgeWeight(e) * accuracy * (smallestCapacity / e.capacity));
+                    if (currentGraph.containsEdge(e)) {
+                        currentGraph.setEdgeWeight(e, currentGraph.getEdgeWeight(e) + currentGraph.getEdgeWeight(e) * accuracy * (smallestCapacity / e.capacity));
+                    }
                 }
+                networkCopy.setEdgeWeight(e, networkCopy.getEdgeWeight(e) + networkCopy.getEdgeWeight(e) * accuracy * (smallestCapacity / e.capacity));
+
                 e.flow = e.flow + smallestCapacity;
                 //demandFlowMap
                 e.demandFlows.put(currentDemandFlowIsPushedAlong, e.demandFlows.get(currentDemandFlowIsPushedAlong) + smallestCapacity);
@@ -254,6 +258,7 @@ public class GargAndKoenemannMMCFImp<V, E>
             }
             // if the ratio between the best flow and the best length function is small enough, we end the algorithm
             if (comparator.compare(minDualObjectiveFunction / maxPrimalObjectiveFunction, 1 + approximationRate) <= 0) {
+                System.out.println("test" + shortestPath);
                 return true;
             }
             return false;
