@@ -78,7 +78,11 @@ public class GargAndKoenemannMMCFImpTest {
         List<String> sinks = new LinkedList();
         sinks.add("v3");
         gargAndKoenemann = new GargAndKoenemannMMCFImp(g, epsilon);
-        MaximumMultiCommodityFlowAlgorithm.MaximumFlow flow = gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate);
+        List<List<DefaultWeightedEdge>> closedEdges = new LinkedList<>();
+        closedEdges.add(new LinkedList());
+        closedEdges.add(new LinkedList());
+        closedEdges.add(new LinkedList());
+        MaximumMultiCommodityFlowAlgorithm.MaximumFlow flow = gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate,closedEdges);
         System.out.println(flow);
 
     }
@@ -98,8 +102,6 @@ public class GargAndKoenemannMMCFImpTest {
         g.addVertex(v1);
         g.addVertex(v2);
         g.addVertex(v3);
-        g.addVertex();
-        g.addVertex();
         System.out.println(g);
         edge = g.addEdge(v1, v2);
         g.setEdgeWeight(edge, 0.1);
@@ -107,7 +109,10 @@ public class GargAndKoenemannMMCFImpTest {
         g.setEdgeWeight(edge, 1);
         edge = g.addEdge(v1, v3);
         g.setEdgeWeight(edge, 1);
-
+        List<List<DefaultWeightedEdge>> closedEdges = new LinkedList<>();
+        closedEdges.add(new LinkedList());
+        closedEdges.add(new LinkedList());
+        closedEdges.add(new LinkedList());
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
         List<String> sources = new LinkedList();
         sources.add(v1);
@@ -116,7 +121,7 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add(v3);
         sinks.add(v3);
         double flow = 1.0;
-        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
+        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate,closedEdges));
         System.out.println(gargAndKoenemann.getFlowMapOfDemand(v1, v3));
 
     }
@@ -157,7 +162,7 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add(v5);
         sinks.add(v6);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
-        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
+        //System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
 
 
     }
@@ -188,7 +193,7 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add("v9999");
 
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
-        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
+       // System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
     }
 
     @Test
@@ -212,7 +217,7 @@ public class GargAndKoenemannMMCFImpTest {
         sinks.add("v1");
         sinks.add("v" + Integer.toString(numberOfEdges - 1));
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
-        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
+       // System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
     }
 
 
@@ -226,7 +231,7 @@ public class GargAndKoenemannMMCFImpTest {
         sources.add(v1);
         List<String> sinks = new LinkedList<>();
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
-        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
+       // double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -239,7 +244,7 @@ public class GargAndKoenemannMMCFImpTest {
         sources.add(v1);
         List<String> sinks = new LinkedList<>();
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
-        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sources, approximationRate);
+       // double flow = gargAndKoenemann.getMaximumFlowValue(sources, sources, approximationRate);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -255,7 +260,7 @@ public class GargAndKoenemannMMCFImpTest {
         List<String> sinks = new LinkedList<>();
         sinks.add(v1);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g);
-        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sources, approximationRate);
+        //double flow = gargAndKoenemann.getMaximumFlowValue(sources, sources, approximationRate);
     }
 
     @Test
@@ -270,8 +275,8 @@ public class GargAndKoenemannMMCFImpTest {
         List<String> sinks = new LinkedList();
         sinks.add(v2);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
-        double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
-        System.out.println(flow);
+       // double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
+        //System.out.println(flow);
     }
 
 
@@ -300,7 +305,7 @@ public class GargAndKoenemannMMCFImpTest {
         }
         ;
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
-        System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
+      //  System.out.println(gargAndKoenemann.getMaximumFlow(sources, sinks, approximationRate));
 
     }
 }

@@ -19,7 +19,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      * @param sinks   sink of the flow inside the network
      * @return maximum flow
      */
-    MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double accuracy);
+    MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double accuracy, List<List<E>> allClosedEdgesForADemand);
 
     // for mcf
     Map<E, Double> getFlowMapOfDemand(V source, V sink);
@@ -35,8 +35,8 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
      * @param sinks   sink vertex
      * @return the value of the maximum flow
      */
-    default double getMaximumFlowValue(List<V> sources, List<V> sinks, double accuracy) {
-        return getMaximumFlow(sources, sinks, accuracy).getValue();
+    default double getMaximumFlowValue(List<V> sources, List<V> sinks, double accuracy, List<List<E>> allClosedEdgesForADemand) {
+        return getMaximumFlow(sources, sinks, accuracy, allClosedEdgesForADemand).getValue();
     }
 
     /**
@@ -68,7 +68,7 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
         private Double value;
 
 
-        private Map<Pair<V, V>, Map<E, Double>> mapOfFlowForEachDemand;
+        private Map<Pair<V, V>, Map<E, Double>> mapOfFlowsForEachDemand;
         Map<Pair<V, V>, Double> values;
 
         /**
@@ -78,9 +78,10 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
          * @param flow  the flow map
          */
         public MaximumMultiCommodityFlowImpl(Double value, Map<E, Double> flow, Map<Pair<V, V>, Double> values, Map<Pair<V, V>, Map<E, Double>> mapOfFlowForEachDemand) {
+
             super(flow);
             this.value = value;
-            this.mapOfFlowForEachDemand = mapOfFlowForEachDemand;
+            this.mapOfFlowsForEachDemand = mapOfFlowForEachDemand;
             this.values = values;
 
         }
@@ -92,12 +93,10 @@ public interface MaximumMultiCommodityFlowAlgorithm<V, E>
 
         @Override
         public String toString() {
-            return "Flow Value: " + value + "\nFlow map:\n" + getFlowMap() +"\n Commodity Flow Maps:" + mapOfFlowForEachDemand + "\n Commodity Flow Values" + values ;
+            return "Flow Value: " + value + "\nFlow map:\n" + getFlowMap() + "\n Commodity Flow Maps:" + mapOfFlowsForEachDemand + "\n Commodity Flow Values" + values;
         }
     }
 }
-
-
 
 
 
