@@ -140,7 +140,7 @@ public class GargAndKoenemannMMCFImp<V, E>
             if (breakingCriterionsAndEdgeScalingObject.actualizeStats(pathsExist, shortestPath)) {
                 break;
             }
-            /**get smallest capacity*/
+            /*get smallest capacity*/
             Double smallestCapacity = Double.POSITIVE_INFINITY;
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
                 double newCapacity = e.capacity;
@@ -148,7 +148,7 @@ public class GargAndKoenemannMMCFImp<V, E>
                     smallestCapacity = e.capacity;
                 }
             }
-            /**update length and flow(value) (also for each demand)*/
+            /*update length and flow(value) (also for each demand)*/
             for (AnnotatedFlowEdge e : shortestPath.getEdgeList()) {
                 for (Graph<VertexExtensionBase, AnnotatedFlowEdge> currentGraph : networkCopyForEachDemand.values()) {
                     if (currentGraph.containsEdge(e)) {
@@ -159,7 +159,7 @@ public class GargAndKoenemannMMCFImp<V, E>
                 networkCopy.setEdgeWeight(e,
                         networkCopy.getEdgeWeight(e) + networkCopy.getEdgeWeight(e) * accuracy * (smallestCapacity / e.capacity));
                 e.flow = e.flow + smallestCapacity;
-                /**demandFlowMap*/
+                /*demandFlowMap*/
                 e.demandFlows.put(currentDemandFlowIsPushedAlong,
                         e.demandFlows.get(currentDemandFlowIsPushedAlong) + smallestCapacity);
             }
@@ -167,7 +167,7 @@ public class GargAndKoenemannMMCFImp<V, E>
             maxFlowValueForEachDemand.put(currentDemandFlowIsPushedAlong,
                     maxFlowValueForEachDemand.get(currentDemandFlowIsPushedAlong) + smallestCapacity);
         }
-        /**scale the flow to make it feasible*/
+        /*scale the flow to make it feasible*/
         breakingCriterionsAndEdgeScalingObject.finish();
     }
 
@@ -188,7 +188,10 @@ public class GargAndKoenemannMMCFImp<V, E>
     }
 
     /**
-     * handle the breaking conditions, the best primal/dual solutions and the scaling
+     * In this object wer temporary save the best primal/dual values we have obtained in any iteration so far.
+     * If we get better ones in the current iteration, they are updated. Furthermore we check if any stopping 
+     * criterion is fulfilled. Moreover we save the primal value for each demand, and the complete MMCF and the MF
+     * for each demand. 
      */
     private class BreakingCriterionsAndEdgeScalingObject {
         double maxPrimalObjectiveFunction = 0.0;
@@ -196,7 +199,7 @@ public class GargAndKoenemannMMCFImp<V, E>
         double bestMaxFlowValue = 0.0;
         int divisionCounter = 0;
         Map<Demand, Double> bestMaxFlowValueForEachDemand = new HashMap<>();
-        Map<E, Double> bestmaxFlow = null;
+        Map<E, Double> bestMaxFlow = null;
         Map<Demand, Map<E, Double>> bestmapOfFlowsForEachDemand = new HashMap<>();
 
         public boolean actualizeStats(boolean pathsExist, GraphPath shortestPath) {
@@ -206,7 +209,7 @@ public class GargAndKoenemannMMCFImp<V, E>
                 System.out.println("There are no valid paths from a source to its sink");
                 // we have to compose the flow...
                 bestMaxFlowValue = 0;
-                bestmaxFlow = composeFlow();
+                bestMaxFlow = composeFlow();
                 for (Demand demand : demands) {
                     bestmapOfFlowsForEachDemand.put(demand, composeFlow(demand));
                     bestMaxFlowValueForEachDemand.put(demand, 0.0);
@@ -246,7 +249,7 @@ public class GargAndKoenemannMMCFImp<V, E>
             if (comparator.compare(intermediatePrimalObjectiveFunction, maxPrimalObjectiveFunction) >= 0) {
                 maxPrimalObjectiveFunction = intermediatePrimalObjectiveFunction;
                 bestMaxFlowValue = maxFlowValue;
-                bestmaxFlow = composeFlow();
+                bestMaxFlow = composeFlow();
                 for (Demand demand : demands) {
                     bestMaxFlowValueForEachDemand.put(demand, maxFlowValueForEachDemand.get(demand));
                     bestmapOfFlowsForEachDemand.put(demand, composeFlow(demand));
@@ -270,7 +273,7 @@ public class GargAndKoenemannMMCFImp<V, E>
         /* with this method we set the final flow to be the best flow so far obtained and scale it */
         public void finish() {
             maxFlowValue = this.bestMaxFlowValue;
-            maxFlow = this.bestmaxFlow;
+            maxFlow = this.bestMaxFlow;
             mapOfFlowsForEachDemand = this.bestmapOfFlowsForEachDemand;
             maxFlowValueForEachDemand = this.bestMaxFlowValueForEachDemand;
             Double mostViolatedEdgeViolation = 0.0;
