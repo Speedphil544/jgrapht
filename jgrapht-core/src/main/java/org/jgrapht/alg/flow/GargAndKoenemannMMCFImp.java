@@ -60,7 +60,7 @@ public class GargAndKoenemannMMCFImp<V, E>
     @Override
     public MaximumFlow<E> getMaximumFlow(List<V> sources, List<V> sinks, double approximationRate,
                                          List<List<E>> allClosedEdgesForADemand) {
-        this.calculateMaxFlow(sources, sinks, approximationRate, allClosedEdgesForADemand);
+        calculateMaxFlow(sources, sinks, approximationRate, allClosedEdgesForADemand);
         return new MaximumMultiCommodityFlowImpl(maxFlowValue, maxFlow, maxFlowValueForEachDemand,
                 mapOfFlowsForEachDemand);
     }
@@ -115,12 +115,12 @@ public class GargAndKoenemannMMCFImp<V, E>
     /**
      * the computation of the MMCF
      */
-    public void gargAndKoenemann() {
+    private void gargAndKoenemann() {
 
         BreakingCriterionsAndEdgeScalingObject breakingCriterionsAndEdgeScalingObject =
                 new BreakingCriterionsAndEdgeScalingObject();
         while (true) {
-            /**choose shortest path, its value, its demand*/
+            /*choose shortest path, its value, its demand*/
             boolean pathsExist = false;
             double shortestPathWeight = Double.POSITIVE_INFINITY;
             GraphPath<VertexExtensionBase, AnnotatedFlowEdge> shortestPath = null;
@@ -188,10 +188,9 @@ public class GargAndKoenemannMMCFImp<V, E>
     }
 
     /**
-     * In this object wer temporary save the best primal/dual values we have obtained in any iteration so far.
-     * If we get better ones in the current iteration, they are updated. Furthermore we check if any stopping 
-     * criterion is fulfilled. Moreover we save the primal value for each demand, and the complete MMCF and the MF
-     * for each demand. 
+     * In this object wer temporary save the best primal/dual values we have obtained in any iteration so far. If we get
+     * better ones in the current iteration, they are updated. Furthermore we check if any stopping criterion is
+     * fulfilled. Moreover we save the primal value for each demand, and the complete MMCF and the MF for each demand.
      */
     private class BreakingCriterionsAndEdgeScalingObject {
         double maxPrimalObjectiveFunction = 0.0;
@@ -202,7 +201,7 @@ public class GargAndKoenemannMMCFImp<V, E>
         Map<E, Double> bestMaxFlow = null;
         Map<Demand, Map<E, Double>> bestmapOfFlowsForEachDemand = new HashMap<>();
 
-        public boolean actualizeStats(boolean pathsExist, GraphPath shortestPath) {
+        private boolean actualizeStats(boolean pathsExist, GraphPath shortestPath) {
 
             /* if there are no valid paths, break and set flow to a zeroMapping*/
             if (!pathsExist) {
@@ -238,7 +237,7 @@ public class GargAndKoenemannMMCFImp<V, E>
             }
             /* finish earlier with acceptable result.
              first we find out which edge is most violated, in order to get a feasible solution */
-            Double mostViolatedEdgeViolation = 1.0;
+            double mostViolatedEdgeViolation = 1.0;
             for (AnnotatedFlowEdge e : networkCopy.edgeSet()) {
                 if (comparator.compare(e.flow / e.capacity, mostViolatedEdgeViolation) > 0) {
                     mostViolatedEdgeViolation = e.flow / e.capacity;
@@ -300,12 +299,12 @@ public class GargAndKoenemannMMCFImp<V, E>
         }
     }
 
-  /** not needed yet
-    public class Demand extends MaximumMultiCommodityFlowAlgorithmBase.Demand {
-        Demand(VertexExtension source, VertexExtension sink) {
-            super(source, sink);
-        }
-    }
-*/
+    /* not needed yet
+     public class Demand extends MaximumMultiCommodityFlowAlgorithmBase.Demand {
+     Demand(VertexExtension source, VertexExtension sink) {
+     super(source, sink);
+     }
+     }
+     */
 
 }
