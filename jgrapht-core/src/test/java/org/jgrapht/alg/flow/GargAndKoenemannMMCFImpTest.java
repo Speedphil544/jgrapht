@@ -69,9 +69,9 @@ public class GargAndKoenemannMMCFImpTest {
 
 
     @Test
-    /*
-    Here we test the algorithm on a random graph (properties of the random of the graph can be modified)
-    */
+    /**
+     Here we test the algorithm on a random graph (properties of the random of the graph can be modified)
+     */
     public void RandomGraphTest() {
         g = createRandomGraph(3, 1, 1, 3);
         List<String> sources = new LinkedList();
@@ -91,13 +91,13 @@ public class GargAndKoenemannMMCFImpTest {
 
 
     @Test
-    /*
-    Here we test the algorithm on a graph with 3 nodes (1,2,3)
-    and two edges ([1,2],[2,3]). The edges have very different capacities.
-    The demand: (1,2).
-    We notice: the length of the edge with the higher capacity grows much slower than the one with the lower capacity.
-    This might lead to a problem: we dont want to have a big ratio of our edge lengths.
-    */
+    /**
+     Here we test the algorithm on a graph with 3 nodes (1,2,3)
+     and two edges ([1,2],[2,3]). The edges have very different capacities.
+     The demand: (1,2).
+     We notice: the length of the edge with the higher capacity grows much slower than the one with the lower capacity.
+     This might lead to a problem: we dont want to have a big ratio of our edge lengths.
+     */
     public void Test1a() {
 
 
@@ -130,14 +130,14 @@ public class GargAndKoenemannMMCFImpTest {
     }
 
     @Test
-    /*
-    nodes: (1,2,3,4,5,6), edges: ([1,3],[2,3],[3,4],[4,5],[5,6]),  demands: (1,5) (2,6).
-    Again, we have very different edge weight(take a look at the code).
-    edge [3,4] grows fastest by far!
-    [3,4] has less capacity than [1,3] and [4,5]. That is why [1,3] grows faster, than [1,3] and [4,5].
-    But [2,3] and [4,6] grow faste than [1,3] und [4,5], since we always choose the shortest path.
-    ->  [3,4] grows faster than all the other edges
-    */
+    /**
+     nodes: (1,2,3,4,5,6), edges: ([1,3],[2,3],[3,4],[4,5],[5,6]),  demands: (1,5) (2,6).
+     Again, we have very different edge weight(take a look at the code).
+     edge [3,4] grows fastest by far!
+     [3,4] has less capacity than [1,3] and [4,5]. That is why [1,3] grows faster, than [1,3] and [4,5].
+     But [2,3] and [4,6] grow faste than [1,3] und [4,5], since we always choose the shortest path.
+     ->  [3,4] grows faster than all the other edges
+     */
     public void Test1b() {
         g.addVertex(v1);
         g.addVertex(v2);
@@ -171,9 +171,8 @@ public class GargAndKoenemannMMCFImpTest {
     }
 
     @Test
-    /*Here we test the algorithm on a graph with following edges(and corresponding nodes ofc.): ([1,2],[2,3],[3,4],...),
-     c(e)=1.0 f.a. e in E. Two demands: (1,2), (2,n).
-     We notice: everything works fine.
+    /**Here we test the algorithm on a graph with following edges(and corresponding nodes ofc.): ([1,2],[2,3],[3,4],.
+     * ..), c(e)=1.0 f.a. e in E. Two demands: (1,2), (2,n). We notice: everything works fine.
      */
     public void Test1c() {
         int numberOfEdges = 10000;
@@ -200,9 +199,9 @@ public class GargAndKoenemannMMCFImpTest {
     }
 
     @Test
-    /*Here we test the algorithm on a graph with following edges(and corresponding nodes ofc.): ([1,2],[2,3],[3,4],...),
-     c(e)=1.0 f.a. e in E. Two demands: (1,2), (2,n).
-     We notice: everything works fine.
+    /**
+     * Here we test the algorithm on a graph with following edges(and corresponding nodes ofc.): ([1,2],[2,3],[3,4],.
+     * ..),c(e)=1.0 f.a. e in E. Two demands: (1,2), (2,n). We notice: everything works fine.
      */
     public void Test2() {
         int numberOfEdges = 1000;
@@ -225,9 +224,9 @@ public class GargAndKoenemannMMCFImpTest {
 
 
     @Test(expected = IllegalArgumentException.class)
-    /*
-   We test what happens if there is no sink
-    */
+    /**
+     We test what happens if there is no sink
+     */
     public void Test3a() {
         g.addVertex(v1);
         List<String> sources = new LinkedList();
@@ -238,9 +237,9 @@ public class GargAndKoenemannMMCFImpTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    /*
-   We test what happens if a source is equal to its sink
-    */
+    /**
+     We test what happens if a source is equal to its sink
+     */
     public void Test3b() {
         g.addVertex(v1);
         List<String> sources = new LinkedList();
@@ -251,9 +250,9 @@ public class GargAndKoenemannMMCFImpTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    /*
-   We test what happens if we have not the same number of sources and sinks
-    */
+    /**
+     We test what happens if we have not the same number of sources and sinks
+     */
     public void Test3c() {
         g.addVertex(v1);
         g.addVertex(v2);
@@ -267,9 +266,9 @@ public class GargAndKoenemannMMCFImpTest {
     }
 
     @Test
-    /*
-    We test what happens if there are no valid paths
-    */
+    /**
+     We test what happens if there are no valid paths
+     */
     public void Test3d() {
         g.addVertex(v1);
         g.addVertex(v2);
@@ -278,17 +277,15 @@ public class GargAndKoenemannMMCFImpTest {
         List<String> sinks = new LinkedList();
         sinks.add(v2);
         gargAndKoenemann = new GargAndKoenemannMMCFImp<>(g, epsilon);
-        // double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
+        //double flow = gargAndKoenemann.getMaximumFlowValue(sources, sinks, approximationRate);
         //System.out.println(flow);
     }
 
 
     @Test
-    /* We have nodes (1,2,3,4,5...,special,end), edges([1,special],[2,special],[3,special],..., [special,
-    end]),
-    and demands: (1,end),(2,end),(3,end),...
-    all capacities equal 1.0
-    */
+    /** We have nodes (1,2,3,4,5...,special,end), edges([1,special],[2,special],[3,special],..., [special,
+     end]), and demands: (1,end),(2,end),(3,end),...    all capacities equal 1.0
+     */
     public void Test4() {
         List<String> sources = new LinkedList();
         List<String> sinks = new LinkedList();
