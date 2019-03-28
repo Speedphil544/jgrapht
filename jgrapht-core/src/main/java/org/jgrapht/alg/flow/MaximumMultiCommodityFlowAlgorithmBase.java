@@ -18,8 +18,7 @@ import java.util.function.Supplier;
  *
  * @param <V> the graph vertex type
  * @param <E> the graph edge type
- * @author Alexey Kudinkin
- * @author Joris Kinable
+ * @author Philipp
  */
 public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         implements
@@ -29,42 +28,69 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      */
     public static final double DEFAULT_EPSILON = 1e-9;
 
-    /* input network */
+    /**
+     * input network
+     */
     protected Graph<V, E> network;
-    /* indicates whether the input graph is directed or not */
+    /**
+     * indicates whether the input graph is directed or not
+     */
     protected final boolean directedGraph;
-    /* Used to compare floating point values */
+    /**
+     * Used to compare floating point values
+     */
     protected Comparator<Double> comparator;
 
     public ExtensionManager<V, ? extends VertexExtensionBase> vertexExtensionManager;
     protected ExtensionManager<E, ? extends AnnotatedFlowEdge> edgeExtensionManager;
 
-    /* Max flow established after last invocation of the algorithm. */
+    /**
+     * Max flow established after last invocation of the algorithm.
+     */
     protected double maxFlowValue = -1;
-    // list of the values foe each demand flow
+    /**
+     * list of the values foe each demand flow
+     */
     protected Map<Demand, Double> maxFlowValueForEachDemand = null;
-    /* Mapping of the flow on each edge. */
+    /**
+     * Mapping of the flow on each edge.
+     */
     protected Map<E, Double> maxFlow = null;
-    /* List of mappings for each demand, */
+    /**
+     * List of mappings for each demand,
+     */
     public Map<Demand, Map<E, Double>> mapOfFlowsForEachDemand = null;
-    /* A copy of the network, that uses a length function as weights, needed for dijkstraShortestPath*/
+    /**
+     * A copy of the network, that uses a length function as weights, needed for dijkstraShortestPath
+     */
     public Graph<VertexExtensionBase, AnnotatedFlowEdge> networkCopy;
-    /* the weight that the copied edges are initialized with*/
+    /**
+     * the weight that the copied edges are initialized with
+     */
     protected double delta = 0;
-    /* accuracy depending on the wanted approximation rate*/
+    /**
+     * accuracy depending on the wanted approximation rate
+     */
     protected double accuracy = 0;
-    /* save a little bit of computation time*/
+    /**
+     * save a little bit of computation time
+     */
     int demandSize = 0;
-    /* needed for the initialization*/
+    /**
+     * needed for the initialization
+     */
     double lengthOfLongestPath = 0.0;
-    /* representation of sources and sinks*/
+    /**
+     * representation of sources and sinks
+     */
     List<Demand> demands = null;
-
-    /*Map for networkCopy for each demand*/
+    /**
+     * Represents the specific network for each demand.
+     */
     Map<Demand, Graph> networkCopyForEachDemand = null;
-
-
-    // for a demand we migth close some edges
+    /**
+     * List of the closed edges for each demand
+     */
     Map<Demand, List<E>> allClosedEdgesForADemand = null;
 
 
@@ -75,22 +101,18 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      * @param epsilon the tolerance for the comparison of floating point values
      */
     public MaximumMultiCommodityFlowAlgorithmBase(Graph<V, E> network, double epsilon) {
-
         this.network = network;
         this.directedGraph = network.getType().isDirected();
         this.comparator = new ToleranceDoubleComparator(epsilon);
-        // network copy
+        /** network copy*/
         Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
         Supplier<AnnotatedFlowEdge> annotatedFlowEdgeSupplier = () -> new AnnotatedFlowEdge();
         this.networkCopy = new DefaultDirectedWeightedGraph(vertexExtensionSupplier, annotatedFlowEdgeSupplier);
         lengthOfLongestPath = network.vertexSet().size();
-
-
     }
 
     /**
-     * Prepares all data structures to start a new invocation of the Maximum Flow or Minimum Cut
-     * algorithms
+     * Prepares all data structures to start a new invocation of the Maximum Flow or Minimum Cut algorithms
      *
      * @param sources                source
      * @param sinks                  sink
@@ -98,11 +120,11 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
      * @param edgeExtensionFactory   edge extension factory
      * @param <VE>                   vertex extension type
      */
-    protected <VE extends VertexExtensionBase> void init(double approximationRate,
-                                                         List<V> sources, List<V> sinks, ExtensionFactory<VE> vertexExtensionFactory,
-                                                         ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory, List<List<E>> allClosedEdgesForADemand
+    protected <VE extends VertexExtensionBase> void init(double approximationRate, List<V> sources, List<V> sinks,
+                                                         ExtensionFactory<VE> vertexExtensionFactory,
+                                                         ExtensionFactory<AnnotatedFlowEdge> edgeExtensionFactory,
+                                                         List<List<E>> allClosedEdgesForADemand
     ) {
-
         vertexExtensionManager = new ExtensionManager<>(vertexExtensionFactory);
         edgeExtensionManager = new ExtensionManager<>(edgeExtensionFactory);
         demands = new ArrayList<>();
@@ -114,15 +136,17 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
             demands.add(new Demand(source, sink));
 
         }
-        // hmmm
+        /**create internal representation for the closed edges for each demand*/
         this.allClosedEdgesForADemand = new HashMap();
-        for (Demand demand: demands){
+        for (Demand demand : demands) {
             this.allClosedEdgesForADemand.put(demand, allClosedEdgesForADemand.get(0));
             allClosedEdgesForADemand.remove(0);
         }
-
-
-        buildInternal();
+        try {
+            buildInternal();
+        } catch (Exception e) {
+            System.out.println("Does not support undirected Graphs yet");
+        }
         maxFlowValue = 0;
         maxFlow = null;
         mapOfFlowsForEachDemand = null;
@@ -130,50 +154,45 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         for (Demand demand : demands) {
             maxFlowValueForEachDemand.put(demand, 0.0);
         }
-
-
     }
 
     /**
      * Create internal data structure
      */
-    void buildInternal() {
+    void buildInternal() throws Exception {
         if (directedGraph) { // Directed graph
 
             /* In order to reduce the runtime we would group commodities which use the same sink:
-            Suppose we have k demands with the same sink. We add another vertex (fakesource) for each demand in this group
-            and add an edge from the the fake source to each source. Instead of computing djikstra k times (for every demand)
-            we compute dijkstra only once: from fakesource o sink.
+            Suppose we have k demands with the same sink. We add another vertex (fakesource) for each demand in this
+            group and add an edge from the the fake source to each source. Instead of computing dijkstra k times (for
+            every demand we compute dijkstra only once: from fakesource to sink.
             Difficult to inmplement. */
 
             networkCopyForEachDemand = new HashMap<>();
             for (Demand demand : demands) {
 
-                Graph<VertexExtensionBase, AnnotatedFlowEdge> currentNetwork = new DefaultDirectedWeightedGraph(AnnotatedFlowEdge.class);
+                Graph<VertexExtensionBase, AnnotatedFlowEdge> currentNetwork =
+                        new DefaultDirectedWeightedGraph(AnnotatedFlowEdge.class);
                 for (V v : network.vertexSet()) {
                     VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                     vx.prototype = v;
                     currentNetwork.addVertex(vx);
                 }
-                // add edges to network copy
+                /** add edges to network copy*/
                 for (E e : network.edgeSet()) {
                     V u = network.getEdgeTarget(e);
                     VertexExtensionBase ux = vertexExtensionManager.getExtension(u);
                     V v = network.getEdgeSource(e);
                     VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                     AnnotatedFlowEdge annotatedFlowEdge = createEdge(vx, ux, e, network.getEdgeWeight(e));
-
-                    // only use edges with capacity that is not zero
+                    /** we only use edges with capacity that is not zero*/
                     if (comparator.compare(annotatedFlowEdge.capacity, 0.0) > 0 && !allClosedEdgesForADemand.get(demand).contains(e)) {
                         currentNetwork.addEdge(vx, ux, annotatedFlowEdge);
                         currentNetwork.setEdgeWeight(vx, ux, delta);
                     }
-
                 }
-
                 networkCopyForEachDemand.put(demand, currentNetwork);
-                            }
-
+            }
 
 
             Supplier<VertexExtensionBase> vertexExtensionSupplier = () -> new VertexExtensionBase();
@@ -200,7 +219,11 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
             }
 
 
-        } else { // Undirected graph
+        }
+        //still to do
+        else {// Undirected graph
+            throw new Exception();
+            /*
             for (V v : network.vertexSet()) {
                 VertexExtensionBase vx = vertexExtensionManager.getExtension(v);
                 vx.prototype = v;
@@ -214,7 +237,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
                 //   AnnotatedFlowEdge backwardEdge = createBackwardEdge(forwardEdge);
                 //ux.getOutgoing().add(forwardEdge);
                 //   vx.getOutgoing().add(backwardEdge);
-            }
+            } */
         }
 
     }
@@ -267,12 +290,11 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
 
     /**
-     * Increase flow in the direction denoted by edge $(u,v)$. Any existing flow in the reverse
-     * direction $(v,u)$ gets reduced first. More precisely, let $f_2$ be the existing flow in the
-     * direction $(v,u)$, and $f_1$ be the desired increase of flow in direction $(u,v)$. If $f_1
-     * \geq f_2$, then the flow on $(v,u)$ becomes $0$, and the flow on $(u,v)$ becomes $f_1-f_2$.
-     * Else, if $f_1 \textlptr f_2$, the flow in the direction $(v, u)$ is reduced, i.e. the flow on
-     * $(v, u)$ becomes $f_2 - f_1$, whereas the flow on $(u,v)$ remains zero.
+     * Increase flow in the direction denoted by edge $(u,v)$. Any existing flow in the reverse direction $(v,u)$ gets
+     * reduced first. More precisely, let $f_2$ be the existing flow in the direction $(v,u)$, and $f_1$ be the desired
+     * increase of flow in direction $(u,v)$. If $f_1 \geq f_2$, then the flow on $(v,u)$ becomes $0$, and the flow on
+     * $(u,v)$ becomes $f_1-f_2$. Else, if $f_1 \textlptr f_2$, the flow in the direction $(v, u)$ is reduced, i.e. the
+     * flow on $(v, u)$ becomes $f_2 - f_1$, whereas the flow on $(u,v)$ remains zero.
      *
      * @param edge desired direction in which the flow is increased
      * @param flow increase of flow in the the direction indicated by the forwardEdge
@@ -300,11 +322,10 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     }
 
     /**
-     * Create a map which specifies for each edge in the input map the amount of flow that flows
-     * through it, added multiple maps for every demand
+     * Create a map which specifies for each edge in the input map the amount of flow that flows through it, added
+     * multiple maps for every demand
      *
-     * @return a map which specifies for each edge in the input map the amount of flow that flows
-     * through it
+     * @return a map which specifies for each edge in the input map the amount of flow that flows through it
      */
     protected Map<E, Double> composeFlow() {
         Map<E, Double> maxFlow = new HashMap<>();
@@ -319,25 +340,15 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     }
 
 
-    /* composes a flow for a given demand */
+    /**
+     * composes a flow for a given demand
+     */
     protected Map<E, Double> composeFlow(Demand demand) {
         Map<E, Double> maxFlow = new HashMap<>();
-      /*  if (mapOfFlowsForEachDemand == null) {
-            mapOfFlowsForEachDemand = new HashMap<>();
-            for (Demand demand : demands) {
-                mapOfFlowsForEachDemand.put(demand, new HashMap<>());
-                for (E e : network.edgeSet()) {
-                    mapOfFlowsForEachDemand.get(demand).put(e, 0.0);
-                }
-            }
-        }
-        */
         for (E e : network.edgeSet()) {
             AnnotatedFlowEdge annotatedFlowEdge = edgeExtensionManager.getExtension(e);
-            // Flow of demand
             maxFlow.put(e, annotatedFlowEdge.demandFlows.get(demand));
         }
-
         return maxFlow;
     }
 
@@ -346,22 +357,13 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
             implements
             Extension {
 
-
-        //private final List<AnnotatedFlowEdge> outgoing = new ArrayList<>();
-
         V prototype;
 
 
         // to String override
-
         public String toString() {
             return this.prototype.toString();
         }
-
-
-        //public List<AnnotatedFlowEdge> getOutgoing() {
-        //  return outgoing;
-        // }
     }
 
     class AnnotatedFlowEdge
@@ -379,11 +381,9 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
         double capacity; // Maximum by which the flow in the direction can be increased (on top of
         // the flow already in this direction).
         double flow; // Flow in the direction denoted by this edge
-
-
-        // new Data Structure[
+        
         Map<Demand, Double> demandFlows; // Flow for each demand in the direction denoted by the edge
-        // ]new Data Structure
+
 
         public <VE extends VertexExtensionBase> VE getSource() {
             return (VE) source;
@@ -440,8 +440,7 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     //}
 
     /**
-     * Returns maximum flow value, that was calculated during last <tt>
-     * calculateMaximumFlow</tt> call.
+     * Returns maximum flow value, that was calculated during last <tt> calculateMaximumFlow</tt> call.
      *
      * @return maximum flow value
      */
@@ -450,9 +449,8 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
     }
 
     /**
-     * Returns maximum flow, that was calculated during last <tt>
-     * calculateMaximumFlow</tt> call, or <tt>null</tt>, if there was no <tt>
-     * calculateMaximumFlow</tt> calls.
+     * Returns maximum flow, that was calculated during last <tt> calculateMaximumFlow</tt> call, or <tt>null</tt>, if
+     * there was no <tt> calculateMaximumFlow</tt> calls.
      *
      * @return <i>read-only</i> mapping from edges to doubles - flow values
      */
@@ -479,11 +477,10 @@ public abstract class MaximumMultiCommodityFlowAlgorithmBase<V, E>
 
 
     /**
-     * Returns the direction of the flow on an edge $(u,v)$. In case $(u,v)$ is a directed edge
-     * (arc), this function will always return the edge target $v$. However, if $(u,v)$ is an edge
-     * in an undirected graph, flow may go through the edge in either side. If the flow goes from
-     * $u$ to $v$, we return $v$, otherwise $u$. If the flow on an edge equals $0$, the returned
-     * value has no meaning.
+     * Returns the direction of the flow on an edge $(u,v)$. In case $(u,v)$ is a directed edge (arc), this function
+     * will always return the edge target $v$. However, if $(u,v)$ is an edge in an undirected graph, flow may go
+     * through the edge in either side. If the flow goes from $u$ to $v$, we return $v$, otherwise $u$. If the flow on
+     * an edge equals $0$, the returned value has no meaning.
      *
      * @param e edge
      * @return the vertex where the flow leaves the edge
